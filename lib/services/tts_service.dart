@@ -61,4 +61,14 @@ class TtsService {
     _isPlaying = false;
     _notifyListeners();
   }
+
+  Future<void> dispose() async {
+    try {
+      await _flutterTts.stop();
+      _isPlaying = false;
+      _notifyListeners();
+    } catch (e) {
+      // Ignore
+    }
+  }
 }
