@@ -6,11 +6,12 @@ import 'package:learning_english/models/tip.dart';
 import 'package:learning_english/models/user_progress.dart';
 import 'package:learning_english/models/offline_download.dart';
 import 'package:learning_english/models/bilingual_item.dart';
+import 'package:learning_english/models/verb.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
-  static const int _dbVersion = 5;
+  static const int _dbVersion = 6;
 
   factory DatabaseHelper() => _instance;
 
@@ -105,6 +106,18 @@ class DatabaseHelper {
         )
       ''');
     }
+    if (oldVersion < 6) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS verbs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          base TEXT NOT NULL,
+          present TEXT NOT NULL,
+          past TEXT NOT NULL,
+          future TEXT NOT NULL,
+          translation TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -183,6 +196,17 @@ class DatabaseHelper {
         english_text TEXT NOT NULL,
         spanish_translation TEXT NOT NULL,
         category TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE verbs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        base TEXT NOT NULL,
+        present TEXT NOT NULL,
+        past TEXT NOT NULL,
+        future TEXT NOT NULL,
+        translation TEXT NOT NULL
       )
     ''');
   }
@@ -317,6 +341,21 @@ class DatabaseHelper {
     return count;
   }
 
+  Future<List<Verb>> getVerbs() async {
+    final db = await database;
+    final result = await db.query('verbs', orderBy: 'base ASC');
+    return result.map((map) => Verb.fromMap(map)).toList();
+  }
+
+  Future<int> insertVerbs(List<Verb> verbs) async {
+    final db = await database;
+    int count = 0;
+    for (var verb in verbs) {
+      count += await db.insert('verbs', verb.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    return count;
+  }
+
   Future<List<OfflineDownload>> getOfflineDownloads() async {
     final db = await database;
     final result = await db.query('offline_downloads', orderBy: 'download_date DESC');
@@ -380,6 +419,7 @@ class DatabaseHelper {
     await db.delete('user_progress');
     await db.delete('english_tips');
     await db.delete('curiosities');
+    await db.delete('verbs');
   }
 
   Future<int> insertUserVocabulary(Map<String, dynamic> entry) async {
@@ -481,7 +521,73 @@ class DatabaseHelper {
       ));
     }
 
+    final shortSentences = <List<String>>[
+      ['the kid is happy', 'el niño es feliz'],
+      ['I like the sea', 'me gusta el mar'],
+      ['she has a dog', 'ella tiene un perro'],
+      ['we eat at home', 'nosotros comemos en casa'],
+      ['he runs fast', 'él corre rápido'],
+      ['the book is new', 'el libro es nuevo'],
+      ['I need a pen', 'necesito un bolígrafo'],
+      ['they live in the city', 'ellos viven en la ciudad'],
+      ['the sky is blue', 'el cielo es azul'],
+      ['you are my friend', 'tú eres mi amigo'],
+      ['the train is late', 'el tren llega tarde'],
+      ['I have a question', 'tengo una pregunta'],
+      ['she sings very well', 'ella canta muy bien'],
+      ['my house is big', 'mi casa es grande'],
+      ['he drinks water', 'él bebe agua'],
+      ['we go to school', 'vamos a la escuela'],
+      ['the cat is black', 'el gato es negro'],
+      ['I read a book', 'leo un libro'],
+      ['they play soccer', 'ellos juegan fútbol'],
+      ['the food is delicious', 'la comida está deliciosa'],
+      ['I want to learn English', 'quiero aprender inglés'],
+      ['the door is open', 'la puerta está abierta'],
+      ['she works every day', 'ella trabaja todos los días'],
+      ['the music is loud', 'la música está fuerte'],
+      ['I am happy today', 'estoy feliz hoy'],
+    ];
+
+    for (final sentence in shortSentences) {
+      wordList.add(Word(
+        wordEn: sentence[0],
+        wordEs: sentence[1],
+        pronunciation: '/${_getPhonetic(sentence[0])}/',
+      ));
+    }
+
     await insertWords(wordList);
+
+    final verbs = <Verb>[
+      Verb(base: 'go', present: 'goes', past: 'went', future: 'will go', translation: 'ir'),
+      Verb(base: 'eat', present: 'eats', past: 'ate', future: 'will eat', translation: 'comer'),
+      Verb(base: 'play', present: 'plays', past: 'played', future: 'will play', translation: 'jugar'),
+      Verb(base: 'run', present: 'runs', past: 'ran', future: 'will run', translation: 'correr'),
+      Verb(base: 'drink', present: 'drinks', past: 'drank', future: 'will drink', translation: 'beber'),
+      Verb(base: 'write', present: 'writes', past: 'wrote', future: 'will write', translation: 'escribir'),
+      Verb(base: 'read', present: 'reads', past: 'read', future: 'will read', translation: 'leer'),
+      Verb(base: 'speak', present: 'speaks', past: 'spoke', future: 'will speak', translation: 'hablar'),
+      Verb(base: 'see', present: 'sees', past: 'saw', future: 'will see', translation: 'ver'),
+      Verb(base: 'come', present: 'comes', past: 'came', future: 'will come', translation: 'venir'),
+      Verb(base: 'take', present: 'takes', past: 'took', future: 'will take', translation: 'tomar / llevar'),
+      Verb(base: 'give', present: 'gives', past: 'gave', future: 'will give', translation: 'dar'),
+      Verb(base: 'buy', present: 'buys', past: 'bought', future: 'will buy', translation: 'comprar'),
+      Verb(base: 'sing', present: 'sings', past: 'sang', future: 'will sing', translation: 'cantar'),
+      Verb(base: 'swim', present: 'swims', past: 'swam', future: 'will swim', translation: 'nadar'),
+      Verb(base: 'teach', present: 'teaches', past: 'taught', future: 'will teach', translation: 'enseñar'),
+      Verb(base: 'sleep', present: 'sleeps', past: 'slept', future: 'will sleep', translation: 'dormir'),
+      Verb(base: 'walk', present: 'walks', past: 'walked', future: 'will walk', translation: 'caminar'),
+      Verb(base: 'work', present: 'works', past: 'worked', future: 'will work', translation: 'trabajar'),
+      Verb(base: 'study', present: 'studies', past: 'studied', future: 'will study', translation: 'estudiar'),
+      Verb(base: 'live', present: 'lives', past: 'lived', future: 'will live', translation: 'vivir'),
+      Verb(base: 'watch', present: 'watches', past: 'watched', future: 'will watch', translation: 'mirar / ver'),
+      Verb(base: 'listen', present: 'listens', past: 'listened', future: 'will listen', translation: 'escuchar'),
+      Verb(base: 'learn', present: 'learns', past: 'learned', future: 'will learn', translation: 'aprender'),
+      Verb(base: 'build', present: 'builds', past: 'built', future: 'will build', translation: 'construir'),
+    ];
+
+    await insertVerbs(verbs);
 
     final tips = <Tip>[
       Tip(title: 'Memoria Espaciada', content: 'Repasa las palabras en intervalos crecientes: 1 día, 3 días, 7 días, 14 días.', category: 'Study'),
@@ -552,7 +658,7 @@ class DatabaseHelper {
     final download = OfflineDownload(
       downloadDate: DateTime.now().toIso8601String(),
       dataPackageName: 'initial_package',
-      wordCount: 100,
+      wordCount: wordList.length,
     );
     await insertOfflineDownload(download);
   }

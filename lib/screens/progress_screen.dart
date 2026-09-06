@@ -217,7 +217,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 const SizedBox(height: 12),
                 ..._tips.take(5).map((tip) => ListTile(
                   title: Text(tip.title, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
-                  subtitle: Text(tip.content, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white54)),
+                  subtitle: Text(tip.content, style: TextStyle(color: Colors.white54)),
                   leading: CircleAvatar(child: Text('${tip.category[0]}', style: const TextStyle(color: Colors.white))),
                 )),
               ],

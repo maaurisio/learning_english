@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:learning_english/db/database_helper.dart';
 import 'package:learning_english/models/word.dart';
@@ -16,6 +17,7 @@ class TestScreen extends StatefulWidget {
 class TestScreenState extends State<TestScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final TtsService _ttsService = TtsService();
+  final TextEditingController _answerController = TextEditingController();
 
   List<Word> _words = [];
   int _currentIndex = 0;
@@ -49,7 +51,7 @@ class TestScreenState extends State<TestScreen> {
       final words = await _dbHelper.getUnlearnedWords();
       if (mounted) {
         setState(() {
-          _words = words;
+          _words = [...words]..shuffle(Random());
           _hasAnyData = allWords.isNotEmpty;
           _currentIndex = 0;
           _wordsCorrect = 0;
@@ -58,8 +60,9 @@ class TestScreenState extends State<TestScreen> {
           _isAnswered = false;
           _isCorrect = false;
           _userAnswer = '';
+          _answerController.clear();
         });
-        if (words.isNotEmpty) {
+        if (_words.isNotEmpty) {
           _startNextQuestion();
         }
       }
@@ -84,6 +87,7 @@ class TestScreenState extends State<TestScreen> {
     _isAnswered = false;
     _isCorrect = false;
     _userAnswer = '';
+    _answerController.clear();
 
     _ttsService.speak(word.wordEn);
     setState(() {});
@@ -102,8 +106,8 @@ class TestScreenState extends State<TestScreen> {
   }
 
   double _calculateDuration(String text) {
-    final duration = ((text.length * 1.5).round() + 15).toDouble();
-    return duration.clamp(15.0, 60.0).toDouble();
+    final duration = ((text.length * 1.5).round() + 15 - 8).toDouble();
+    return duration.clamp(10.0, 60.0).toDouble();
   }
 
   void _advanceQuestion() {
@@ -195,6 +199,7 @@ class TestScreenState extends State<TestScreen> {
   @override
   void dispose() {
     _cancelTimer();
+    _answerController.dispose();
     _ttsService.dispose();
     super.dispose();
   }
@@ -296,38 +301,52 @@ class TestScreenState extends State<TestScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    TextField(
-                      enabled: !_isAnswered,
-                      decoration: InputDecoration(
-                        hintText: 'Escribe la traducción...',
-                        filled: true,
-                        fillColor: const Color(0xFF1C1C1E),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                        prefixIcon: const Icon(Icons.translate, color: Colors.white54),
-                        errorText: _isAnswered && !_isCorrect ? 'Respuesta incorrecta' : null,
-                        hintStyle: TextStyle(color: Colors.white54),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      ),
-                      style: const TextStyle(fontSize: 18, color: Colors.white),
-                      textInputAction: TextInputAction.done,
-                      onChanged: (value) => setState(() => _userAnswer = value),
-                      onSubmitted: _isAnswered ? null : (value) => _checkAnswer(),
-                    ),
-                    const SizedBox(height: 16),
-                    if (!_isAnswered)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _userAnswer.trim().isEmpty ? null : _checkAnswer,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF8A2BE2),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _answerController,
+                            enabled: !_isAnswered,
+                            onChanged: (value) => setState(() => _userAnswer = value),
+                            onSubmitted: _isAnswered ? null : (value) => _checkAnswer(),
+                            textInputAction: TextInputAction.done,
+                            decoration: InputDecoration(
+                              hintText: 'Escribe la traducción...',
+                              filled: true,
+                              fillColor: const Color(0xFF1C1C1E),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                              prefixIcon: const Icon(Icons.translate, color: Colors.white54),
+                              errorText: _isAnswered && !_isCorrect ? 'Respuesta incorrecta' : null,
+                              hintStyle: TextStyle(color: Colors.white54),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            ),
+                            style: const TextStyle(fontSize: 18, color: Colors.white),
                           ),
-                          child: const Text('Validar Respuesta', style: TextStyle(fontSize: 18, color: Colors.white)),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: _isAnswered
+                              ? Icon(
+                                  _isCorrect ? Icons.check_circle : Icons.cancel,
+                                  color: _isCorrect ? Colors.green : Colors.red,
+                                  size: 40,
+                                )
+                              : ElevatedButton(
+                                  onPressed: _userAnswer.trim().isEmpty ? null : _checkAnswer,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF8A2BE2),
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.zero,
+                                    shape: const CircleBorder(),
+                                  ),
+                                  child: const Icon(Icons.visibility, size: 28, color: Colors.white),
+                                ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 16),
                     if (_isAnswered)
                       Container(

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:learning_english/db/database_helper.dart';
 import 'package:learning_english/models/word.dart';
+import 'package:learning_english/models/verb.dart';
 import 'package:learning_english/services/tts_service.dart';
 import 'package:learning_english/widgets/flip_card_widget.dart';
 import 'package:learning_english/widgets/glass_card.dart';
@@ -191,6 +192,61 @@ class GlossaryScreenState extends State<GlossaryScreen>
     );
   }
 
+  void _showVerbList() async {
+    final verbs = await _dbHelper.getVerbs();
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.7,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => verbs.isEmpty
+            ? const Center(
+                child: Text('No hay verbos descargados', style: TextStyle(color: Colors.white)),
+              )
+            : ListView.builder(
+                controller: scrollController,
+                itemCount: verbs.length,
+                itemBuilder: (context, index) {
+                  final v = verbs[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: GlassCard(
+                      child: ListTile(
+                        title: Text(v.base, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text(
+                              'Presente: ${v.present}  •  Pasado: ${v.past}  •  Futuro: ${v.future}',
+                              style: const TextStyle(fontSize: 13, color: Color(0xFF00E5FF)),
+                            ),
+                            const SizedBox(height: 2),
+                            Text('Traducción: ${v.translation}', style: const TextStyle(color: Colors.white54)),
+                          ],
+                        ),
+                        isThreeLine: true,
+                        leading: IconButton(
+                          icon: const Icon(Icons.volume_up, color: Color(0xFF8A2BE2)),
+                          onPressed: () => _speakWord(v.base),
+                          tooltip: 'Escuchar',
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _screenWidth = MediaQuery.of(context).size.width;
@@ -203,20 +259,40 @@ class GlossaryScreenState extends State<GlossaryScreen>
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Palabras',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-              OutlinedButton.icon(
-                onPressed: _allWords.isEmpty ? null : _showWordList,
-                icon: const Icon(Icons.list, size: 18),
-                label: const Text('Lista de palabras'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF8A2BE2),
-                  side: const BorderSide(color: Color(0xFF8A2BE2)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _allWords.isEmpty ? null : _showWordList,
+                      icon: const Icon(Icons.list, size: 18),
+                      label: const Text('Lista'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF8A2BE2),
+                        side: const BorderSide(color: Color(0xFF8A2BE2)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _allWords.isEmpty ? null : _showVerbList,
+                      icon: const Icon(Icons.bolt, size: 18),
+                      label: const Text('Verbos'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF00E5FF),
+                        side: const BorderSide(color: Color(0xFF00E5FF)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -230,25 +230,29 @@ class TipsScreenState extends State<TipsScreen> {
                             child: SlideTransition(position: offset, child: child),
                           );
                         },
-                        child: Column(
+                        child: SingleChildScrollView(
                           key: ValueKey(item.id),
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              item.englishText,
-                              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white, height: 1.3),
-                              textAlign: TextAlign.center,
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  item.englishText,
+                                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white, height: 1.3),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 14),
+                                Container(height: 1, color: Colors.white.withOpacity(0.15)),
+                                const SizedBox(height: 14),
+                                Text(
+                                  item.spanishTranslation,
+                                  style: const TextStyle(fontSize: 15, color: Colors.white54, height: 1.4),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 16),
-                            Container(height: 1, color: Colors.white.withOpacity(0.15)),
-                            const SizedBox(height: 16),
-                            Text(
-                              item.spanishTranslation,
-                              style: const TextStyle(fontSize: 16, color: Colors.white54, height: 1.4),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
