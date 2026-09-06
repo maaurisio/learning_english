@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:learning_english/screens/home_screen.dart';
 import 'package:learning_english/screens/progress_screen.dart';
 import 'package:learning_english/screens/glossary_screen.dart';
 import 'package:learning_english/screens/test_screen.dart';
@@ -19,26 +18,28 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.light,
+          seedColor: const Color(0xFF8A2BE2),
+          brightness: Brightness.dark,
         ),
         useMaterial3: true,
+        scaffoldBackgroundColor: Colors.black,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: true,
         ),
         cardTheme: CardThemeData(
-          elevation: 4,
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(32),
           ),
-          shadowColor: Colors.deepPurple.withOpacity(0.1),
+          shadowColor: Colors.transparent,
+          color: Colors.transparent,
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.grey[100],
+          fillColor: const Color(0xFF1C1C1E),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
@@ -47,11 +48,18 @@ class MyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: const Color(0xFF8A2BE2),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           ),
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          selectedItemColor: const Color(0xFF8A2BE2),
+          unselectedItemColor: Colors.white54,
+          type: BottomNavigationBarType.fixed,
         ),
       ),
       initialRoute: '/',

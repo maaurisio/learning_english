@@ -3,6 +3,7 @@ import 'package:learning_english/db/database_helper.dart';
 import 'package:learning_english/models/word.dart';
 import 'package:learning_english/services/tts_service.dart';
 import 'package:learning_english/widgets/flip_card_widget.dart';
+import 'package:learning_english/widgets/glass_card.dart';
 
 class GlossaryScreen extends StatefulWidget {
   const GlossaryScreen({super.key});
@@ -86,7 +87,7 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
                 final w = learnedWords[index];
                 return ListTile(
                   title: Text(w.wordEn, style: const TextStyle(fontSize: 18)),
-                  subtitle: Text(w.wordEs, style: TextStyle(color: Colors.grey[600])),
+                  subtitle: Text(w.wordEs, style: TextStyle(color: Colors.white70)),
                   trailing: const Icon(Icons.check_circle, color: Colors.green),
                 );
               },
@@ -104,11 +105,11 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Glosario Interactivo',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.deepPurple,
+        title: const Text('Glosario Interactivo', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.list),
@@ -117,6 +118,7 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
           ),
         ],
       ),
+      backgroundColor: Colors.black,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _words.isEmpty
@@ -124,12 +126,11 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.library_books,
-                          size: 64, color: Colors.deepPurple.withOpacity(0.3)),
+                      Icon(Icons.library_books, size: 64, color: Colors.deepPurple.withOpacity(0.3)),
                       const SizedBox(height: 16),
                       Text(
                         '¡Has repasado todas las palabras!',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: 16, color: Colors.white70),
                       ),
                     ],
                   ),
@@ -152,20 +153,19 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
                       color: Colors.orange,
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.only(left: 24),
-                      child: const Icon(Icons.add_circle_outline,
-                          color: Colors.white, size: 40),
+                      child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 40),
                     ),
-                    child: _buildCard(_words.first),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
+                        child: GlassCard(
+                          child: _buildCard(_words.first),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-      floatingActionButton: _words.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: () => _speakWord(_words.first.wordEn),
-              icon: const Icon(Icons.volume_up),
-              label: const Text('Escuchar'),
-              backgroundColor: Colors.deepPurple,
-            )
-          : null,
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -177,68 +177,78 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
   }
 
   Widget _buildCardFront(Word word) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.deepPurple,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.deepPurple.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          word.wordEn,
-          style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
+    return Center(
+      child: Text(
+        word.wordEn,
+        style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.white),
+        textAlign: TextAlign.center,
       ),
     );
   }
 
   Widget _buildCardBack(Word word) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(word.wordEs, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+        const SizedBox(height: 12),
+        Text(
+          word.pronunciation.isNotEmpty ? word.pronunciation : '',
+          style: TextStyle(fontSize: 16, color: Colors.white54, fontStyle: FontStyle.italic),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton.icon(
+          onPressed: () => _speakWord(word.wordEn),
+          icon: const Icon(Icons.volume_up),
+          label: const Text('Escuchar'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF8A2BE2),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.7),
+            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _bottomNavItem(Icons.home, 'Inicio', '/'),
+              _bottomNavItem(Icons.list, 'Glosario', '/glossary'),
+              _bottomNavItem(Icons.quiz, 'Test', '/test'),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _bottomNavItem(IconData icon, String label, String route) {
+    return GestureDetector(
+      onTap: () {
+        if (route == '/') Navigator.pop(context);
+        else Navigator.pushNamed(context, route);
+      },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            word.wordEs,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            word.pronunciation.isNotEmpty ? word.pronunciation : '',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600], fontStyle: FontStyle.italic),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => _speakWord(word.wordEn),
-            icon: const Icon(Icons.volume_up),
-            label: const Text('Escuchar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            ),
-          ),
+          Icon(icon, color: Colors.white70, size: 26),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.white54)),
         ],
       ),
     );

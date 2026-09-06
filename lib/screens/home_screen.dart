@@ -1,8 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:learning_english/db/database_helper.dart';
 import 'package:learning_english/models/fact.dart';
 import 'package:learning_english/services/tts_service.dart';
+import 'package:learning_english/widgets/glass_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Fact? _currentFact;
   bool _isLoading = true;
   bool _isPlaying = false;
+  int _currentNavIndex = 0;
 
   @override
   void initState() {
@@ -31,11 +34,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
     _ttsService.addListener(_onTtsStateChange);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
   }
 
   Future<void> _refreshData() async {
@@ -118,10 +116,10 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(wordEn, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               if (pronunciation.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(pronunciation, style: TextStyle(fontSize: 14, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                Text(pronunciation, style: TextStyle(fontSize: 14, color: Colors.white70, fontStyle: FontStyle.italic)),
               ],
               const Divider(height: 24),
-              Text('Traducción:', style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+              Text('Traducción:', style: TextStyle(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               Text(wordEs, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
               const SizedBox(height: 16),
@@ -136,9 +134,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: const Icon(Icons.add_circle_outline),
                     label: const Text('Añadir a Flashcards'),
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white, backgroundColor: Colors.deepPurple,
+                      backgroundColor: const Color(0xFF8A2BE2),
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                     ),
                   ),
                 ),
@@ -184,11 +183,11 @@ class _HomeScreenState extends State<HomeScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.deepPurple.withOpacity(0.08),
-            border: Border.all(color: Colors.deepPurple.withOpacity(0.3)),
+            color: const Color(0xFF8A2BE2).withOpacity(0.15),
+            border: Border.all(color: const Color(0xFF8A2BE2).withOpacity(0.3)),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text(word, style: const TextStyle(fontSize: 16, color: Colors.deepPurple, fontWeight: FontWeight.w500)),
+          child: Text(word, style: const TextStyle(fontSize: 16, color: const Color(0xFF8A2BE2), fontWeight: FontWeight.w500)),
         ),
       );
     }).toList();
@@ -202,8 +201,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToScreen(String routeName) {
-    Navigator.pop(context);
-    Navigator.pushNamed(context, routeName);
+    if (routeName == '/') {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushNamed(context, routeName);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshData());
   }
 
@@ -214,11 +216,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('English Daily Facts', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -228,41 +231,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.deepPurple),
-              child: const Text('Menú', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-            ),
-            _drawerItem(Icons.home, 'Inicio', '/'),
-            _drawerItem(Icons.bar_chart, 'Progresos y Datos', '/progress'),
-            _drawerItem(Icons.menu_book, 'Glosario', '/glossary'),
-            _drawerItem(Icons.quiz, 'Modo Test', '/test'),
-            ListTile(
-              leading: const Icon(Icons.exit_to_app, color: Colors.red),
-              title: const Text('Salir', style: TextStyle(color: Colors.red)),
-              onTap: _exitApp,
-            ),
-          ],
-        ),
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (_currentFact != null) ...[
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [Colors.deepPurple, Colors.deepPurpleAccent]),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                    GlassCard(
                       child: Padding(
-                        padding: const EdgeInsets.all(24.0),
+                        padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -272,11 +251,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: const Color(0xFF8A2BE2).withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(_currentFact!.difficultyLevel,
-                                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                                    style: const TextStyle(color: Color(0xFF8A2BE2), fontSize: 14, fontWeight: FontWeight.bold)),
                                 ),
                                 if (_currentFact!.isRead)
                                   const Icon(Icons.check_circle, color: Colors.green, size: 22),
@@ -285,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 20),
                             Wrap(children: _buildWordChips()),
                             const SizedBox(height: 24),
-                            const Divider(color: Colors.white70),
+                            const Divider(color: Colors.white10),
                             const SizedBox(height: 12),
                             Text('Traducción:', style: TextStyle(fontSize: 13, color: Colors.white70, fontWeight: FontWeight.w600)),
                             const SizedBox(height: 4),
@@ -296,32 +275,67 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                  ],
-                  if (_currentFact != null)
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: _speakFact,
                         icon: const Icon(Icons.volume_up),
                         label: const Text('Escuchar en voz alta'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.deepPurple,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8A2BE2),
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                         ),
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
-  Widget _drawerItem(IconData icon, String title, String route) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.deepPurple),
-      title: Text(title, style: const TextStyle(fontSize: 16)),
-      onTap: () => _navigateToScreen(route),
+  Widget _buildBottomNavBar() {
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.7),
+            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _bottomNavItem(Icons.home, 'Inicio', '/'),
+              _bottomNavItem(Icons.bar_chart, 'Progreso', '/progress'),
+              _bottomNavItem(Icons.menu_book, 'Glosario', '/glossary'),
+              _bottomNavItem(Icons.quiz, 'Test', '/test'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bottomNavItem(IconData icon, String label, String route) {
+    return GestureDetector(
+      onTap: () {
+        if (route == '/') Navigator.pop(context);
+        else Navigator.pushNamed(context, route);
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white70, size: 24),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 10, color: Colors.white54)),
+        ],
+      ),
     );
   }
 }

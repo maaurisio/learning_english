@@ -4,6 +4,7 @@ import 'package:learning_english/db/database_helper.dart';
 import 'package:learning_english/models/word.dart';
 import 'package:learning_english/models/user_progress.dart';
 import 'package:learning_english/services/tts_service.dart';
+import 'package:learning_english/widgets/glass_card.dart';
 
 class TestScreen extends StatefulWidget {
   const TestScreen({super.key});
@@ -201,18 +202,21 @@ class _TestScreenState extends State<TestScreen> {
   Widget build(BuildContext context) {
     if (_isLoading || _words.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Modo Test', style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: Colors.deepPurple, foregroundColor: Colors.white, elevation: 0),
+        backgroundColor: Colors.black,
+        appBar: AppBar(title: const Text('Modo Test', style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: Colors.transparent, foregroundColor: Colors.white, elevation: 0),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     final word = _words[_currentIndex];
     final progressPercent = _totalTime > 0 ? (_timeRemaining / _totalTime).clamp(0.0, 1.0) : 0.0;
+    final progressColor = progressPercent > 0.3 ? const Color(0xFF00E5FF) : progressPercent > 0.15 ? Colors.orange : Colors.red;
 
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Modo Test', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -234,97 +238,107 @@ class _TestScreenState extends State<TestScreen> {
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 100),
-            height: 10,
+            height: 8,
             width: double.infinity,
-            color: Colors.grey[300],
-            child: LinearProgressIndicator(
-              value: progressPercent,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation<Color>(
-                progressPercent > 0.3 ? Colors.green : progressPercent > 0.15 ? Colors.orange : Colors.red,
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progressPercent,
+                backgroundColor: Colors.white10,
+                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
               ),
             ),
           ),
-          Text('${_timeRemaining.toStringAsFixed(1)}s', style: TextStyle(fontSize: 12, color: progressPercent > 0.3 ? Colors.green : Colors.orange)),
+          Text('${_timeRemaining.toStringAsFixed(1)}s', style: TextStyle(fontSize: 12, color: progressColor)),
 
           Expanded(
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(word.wordEn, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-                    ),
-                    const SizedBox(height: 8),
-                    ElevatedButton.icon(
-                      onPressed: () => _ttsService.speak(word.wordEn),
-                      icon: const Icon(Icons.volume_up),
-                      label: const Text('Escuchar'),
-                      style: ElevatedButton.styleFrom(foregroundColor: Colors.white, backgroundColor: Colors.deepPurple),
-                    ),
-                    const SizedBox(height: 32),
-                    TextField(
-                      enabled: !_isAnswered,
-                      decoration: InputDecoration(
-                        hintText: 'Escribe la traducción...',
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                        prefixIcon: const Icon(Icons.translate),
-                        errorText: _isAnswered && !_isCorrect ? 'Respuesta incorrecta' : null,
-                      ),
-                      style: const TextStyle(fontSize: 18),
-                      textInputAction: TextInputAction.done,
-                      onChanged: (value) => setState(() => _userAnswer = value),
-                      onSubmitted: _isAnswered ? null : (value) => _checkAnswer(),
-                    ),
-                    const SizedBox(height: 16),
-                    if (!_isAnswered)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _userAnswer.trim().isEmpty ? null : _checkAnswer,
-                          style: ElevatedButton.styleFrom(foregroundColor: Colors.white, backgroundColor: Colors.deepPurple, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                          child: const Text('Validar Respuesta', style: TextStyle(fontSize: 18)),
+                child: GlassCard(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(word.wordEn, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: () => _ttsService.speak(word.wordEn),
+                        icon: const Icon(Icons.volume_up),
+                        label: const Text('Escuchar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8A2BE2),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                         ),
                       ),
-                    const SizedBox(height: 16),
-                    if (_isAnswered)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: _isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 32),
+                      TextField(
+                        enabled: !_isAnswered,
+                        decoration: InputDecoration(
+                          hintText: 'Escribe la traducción...',
+                          filled: true,
+                          fillColor: const Color(0xFF1C1C1E),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                          prefixIcon: const Icon(Icons.translate, color: Colors.white54),
+                          errorText: _isAnswered && !_isCorrect ? 'Respuesta incorrecta' : null,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(_isCorrect ? Icons.check_circle : Icons.cancel, color: _isCorrect ? Colors.green : Colors.red),
-                            const SizedBox(width: 8),
-                            Text(_isCorrect ? '¡Correcto! 🎉' : 'Correcto: ${word.wordEs}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _isCorrect ? Colors.green : Colors.red)),
-                          ],
-                        ),
+                        style: const TextStyle(fontSize: 18, color: Colors.white),
+                        textInputAction: TextInputAction.done,
+                        onChanged: (value) => setState(() => _userAnswer = value),
+                        onSubmitted: _isAnswered ? null : (value) => _checkAnswer(),
                       ),
-                  ],
+                      const SizedBox(height: 16),
+                      if (!_isAnswered)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _userAnswer.trim().isEmpty ? null : _checkAnswer,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF8A2BE2),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                            ),
+                            child: const Text('Validar Respuesta', style: TextStyle(fontSize: 18)),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      if (_isAnswered)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: _isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(_isCorrect ? Icons.check_circle : Icons.cancel, color: _isCorrect ? Colors.green : Colors.red),
+                              const SizedBox(width: 8),
+                              Text(_isCorrect ? '¡Correcto! 🎉' : 'Correcto: ${word.wordEs}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _isCorrect ? Colors.green : Colors.red)),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            color: Colors.deepPurple.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Text('Correctas: $_wordsCorrect', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                Text('Total: $_totalTests', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                Text('Total: $_totalTests', style: const TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF8A2BE2))),
               ],
             ),
           ),
