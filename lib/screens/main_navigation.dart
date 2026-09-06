@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:learning_english/screens/progress_screen.dart';
 import 'package:learning_english/screens/glossary_screen.dart';
 import 'package:learning_english/screens/test_screen.dart';
+import 'package:learning_english/screens/tips_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -16,12 +17,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final _glossaryKey = GlobalKey<GlossaryScreenState>();
   final _testKey = GlobalKey<TestScreenState>();
+  final _tipsKey = GlobalKey<TipsScreenState>();
 
   late final List<Widget> _screens;
   static const List<String> _titles = [
     'Progresos y Datos',
     'Glosario Interactivo',
     'Test de Traducción',
+    'Tips y Curiosidades',
   ];
 
   @override
@@ -31,6 +34,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const ProgressScreen(),
       GlossaryScreen(key: _glossaryKey),
       TestScreen(key: _testKey),
+      TipsScreen(key: _tipsKey),
     ];
   }
 
@@ -43,6 +47,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           break;
         case 2:
           _testKey.currentState?.reload();
+          break;
+        case 3:
+          _tipsKey.currentState?.reload();
           break;
       }
     });
@@ -85,6 +92,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               _bottomNavItem(Icons.home, 'Inicio', 0),
               _bottomNavItem(Icons.menu_book, 'Glosario', 1),
               _bottomNavItem(Icons.quiz, 'Test', 2),
+              _bottomNavItem(Icons.lightbulb, 'Tips', 3),
             ],
           ),
         ),

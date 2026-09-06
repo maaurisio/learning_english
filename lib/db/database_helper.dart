@@ -5,11 +5,12 @@ import 'package:learning_english/models/word.dart';
 import 'package:learning_english/models/tip.dart';
 import 'package:learning_english/models/user_progress.dart';
 import 'package:learning_english/models/offline_download.dart';
+import 'package:learning_english/models/bilingual_item.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
-  static const int _dbVersion = 4;
+  static const int _dbVersion = 5;
 
   factory DatabaseHelper() => _instance;
 
@@ -86,6 +87,24 @@ class DatabaseHelper {
         )
       ''');
     }
+    if (oldVersion < 5) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS english_tips (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          english_text TEXT NOT NULL,
+          spanish_translation TEXT NOT NULL,
+          category TEXT
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS curiosities (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          english_text TEXT NOT NULL,
+          spanish_translation TEXT NOT NULL,
+          category TEXT
+        )
+      ''');
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -146,6 +165,24 @@ class DatabaseHelper {
         next_review_date TEXT,
         interval INTEGER,
         ease_factor REAL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE english_tips (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        english_text TEXT NOT NULL,
+        spanish_translation TEXT NOT NULL,
+        category TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE curiosities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        english_text TEXT NOT NULL,
+        spanish_translation TEXT NOT NULL,
+        category TEXT
       )
     ''');
   }
@@ -250,6 +287,36 @@ class DatabaseHelper {
     return count;
   }
 
+  Future<List<BilingualItem>> getEnglishTips() async {
+    final db = await database;
+    final result = await db.query('english_tips', orderBy: 'id ASC');
+    return result.map((map) => BilingualItem.fromMap(map)).toList();
+  }
+
+  Future<List<BilingualItem>> getCuriosities() async {
+    final db = await database;
+    final result = await db.query('curiosities', orderBy: 'id ASC');
+    return result.map((map) => BilingualItem.fromMap(map)).toList();
+  }
+
+  Future<int> insertEnglishTips(List<BilingualItem> items) async {
+    final db = await database;
+    int count = 0;
+    for (var item in items) {
+      count += await db.insert('english_tips', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    return count;
+  }
+
+  Future<int> insertCuriosities(List<BilingualItem> items) async {
+    final db = await database;
+    int count = 0;
+    for (var item in items) {
+      count += await db.insert('curiosities', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    return count;
+  }
+
   Future<List<OfflineDownload>> getOfflineDownloads() async {
     final db = await database;
     final result = await db.query('offline_downloads', orderBy: 'download_date DESC');
@@ -311,6 +378,8 @@ class DatabaseHelper {
     await db.delete('user_vocabulary');
     await db.delete('offline_downloads');
     await db.delete('user_progress');
+    await db.delete('english_tips');
+    await db.delete('curiosities');
   }
 
   Future<int> insertUserVocabulary(Map<String, dynamic> entry) async {
@@ -428,6 +497,45 @@ class DatabaseHelper {
     ];
 
     await insertTips(tips);
+
+    final englishTips = <BilingualItem>[
+      BilingualItem(englishText: 'I feel like a coffee, what about you?', spanishTranslation: 'Me apetece un café, ¿y a ti?', category: 'Frase común'),
+      BilingualItem(englishText: 'Take your time, there is no rush at all.', spanishTranslation: 'Tómate tu tiempo, no hay ninguna prisa.', category: 'Frase común'),
+      BilingualItem(englishText: 'It depends on how much time we have left.', spanishTranslation: 'Depende de cuánto tiempo nos quede.', category: 'Gramática'),
+      BilingualItem(englishText: 'Let me know if you need a hand with that.', spanishTranslation: 'Avísame si necesitas ayuda con eso.', category: 'Frase común'),
+      BilingualItem(englishText: 'I used to play soccer when I was a kid.', spanishTranslation: 'Solía jugar fútbol cuando era niño.', category: 'Pasado'),
+      BilingualItem(englishText: 'If I had more money, I would travel the world.', spanishTranslation: 'Si tuviera más dinero, viajaría por el mundo.', category: 'Condicional'),
+      BilingualItem(englishText: 'She has been working here for two years.', spanishTranslation: 'Ella ha estado trabajando aquí durante dos años.', category: 'Presente perfecto'),
+      BilingualItem(englishText: 'Could you turn down the music, please?', spanishTranslation: '¿Podrías bajar la música, por favor?', category: 'Frase común'),
+      BilingualItem(englishText: 'I am looking forward to seeing you soon.', spanishTranslation: 'Tengo ganas de verte pronto.', category: 'Frase común'),
+      BilingualItem(englishText: 'Although it was raining, we went for a walk.', spanishTranslation: 'Aunque estaba lloviendo, salimos a caminar.', category: 'Conectores'),
+      BilingualItem(englishText: 'Keep in mind that practice makes perfect.', spanishTranslation: 'Ten en cuenta que la práctica hace al maestro.', category: 'Refrán'),
+      BilingualItem(englishText: 'The sooner we start, the sooner we finish.', spanishTranslation: 'Cuanto antes empecemos, antes terminaremos.', category: 'Expresión'),
+      BilingualItem(englishText: 'I would rather stay home than go out tonight.', spanishTranslation: 'Prefiero quedarme en casa antes que salir esta noche.', category: 'Preferencias'),
+      BilingualItem(englishText: 'That makes sense, but I need to think about it.', spanishTranslation: 'Eso tiene sentido, pero necesito pensarlo.', category: 'Frase común'),
+      BilingualItem(englishText: 'He is good at solving problems quickly.', spanishTranslation: 'Él es bueno resolviendo problemas rápidamente.', category: 'Habilidades'),
+    ];
+
+    final curiosities = <BilingualItem>[
+      BilingualItem(englishText: 'Honey never spoils. Archaeologists have found edible honey in ancient Egyptian tombs.', spanishTranslation: 'La miel nunca se echa a perder. Arqueólogos han encontrado miel comestible en tumbas del antiguo Egipto.', category: 'Naturaleza'),
+      BilingualItem(englishText: 'Octopuses have three hearts and blue blood.', spanishTranslation: 'Los pulpos tienen tres corazones y sangre azul.', category: 'Animales'),
+      BilingualItem(englishText: 'A day on Venus is longer than a year on Venus.', spanishTranslation: 'Un día en Venus es más largo que un año en Venus.', category: 'Espacio'),
+      BilingualItem(englishText: 'Bananas are berries, but strawberries are not.', spanishTranslation: 'Los plátanos son bayas, pero las fresas no.', category: 'Datos curiosos'),
+      BilingualItem(englishText: 'Scotland has 421 words for snow.', spanishTranslation: 'Escocia tiene 421 palabras para referirse a la nieve.', category: 'Idiomas'),
+      BilingualItem(englishText: 'The Eiffel Tower grows about 15 cm taller in summer due to heat expansion.', spanishTranslation: 'La Torre Eiffel crece unos 15 cm en verano debido a la expansión por el calor.', category: 'Cultura'),
+      BilingualItem(englishText: 'Koalas sleep up to 22 hours a day.', spanishTranslation: 'Los koalas duermen hasta 22 horas al día.', category: 'Animales'),
+      BilingualItem(englishText: 'The shortest war in history lasted only 38 minutes.', spanishTranslation: 'La guerra más corta de la historia duró solo 38 minutos.', category: 'Historia'),
+      BilingualItem(englishText: 'There are more possible chess games than atoms in the observable universe.', spanishTranslation: 'Hay más partidas de ajedrez posibles que átomos en el universo observable.', category: 'Juegos'),
+      BilingualItem(englishText: 'Butterflies taste with their feet.', spanishTranslation: 'Las mariposas saborean con sus patas.', category: 'Animales'),
+      BilingualItem(englishText: 'The human brain uses about 20% of all the body energy.', spanishTranslation: 'El cerebro humano usa alrededor del 20% de toda la energía del cuerpo.', category: 'Cuerpo'),
+      BilingualItem(englishText: 'Water can boil and freeze at the same time under special conditions.', spanishTranslation: 'El agua puede hervir y congelarse al mismo tiempo en condiciones especiales.', category: 'Ciencia'),
+      BilingualItem(englishText: 'A cloud can weigh more than a million kilograms.', spanishTranslation: 'Una nube puede pesar más de un millón de kilogramos.', category: 'Naturaleza'),
+      BilingualItem(englishText: 'The Great Wall of China is not visible from space with the naked eye.', spanishTranslation: 'La Gran Muralla China no es visible desde el espacio a simple vista.', category: 'Cultura'),
+      BilingualItem(englishText: 'Camels store water not in their humps, but in their bloodstream.', spanishTranslation: 'Los camellos no almacenan agua en sus jorobas, sino en el torrente sanguíneo.', category: 'Animales'),
+    ];
+
+    await insertEnglishTips(englishTips);
+    await insertCuriosities(curiosities);
 
     final fact = Fact(
       englishText: 'Knowledge is power, and consistent practice is the key to mastering any language.',
