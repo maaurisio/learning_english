@@ -3,10 +3,26 @@ import 'package:flutter_tts/flutter_tts.dart';
 class TtsService {
   static final TtsService _instance = TtsService._internal();
   final FlutterTts _flutterTts = FlutterTts();
+  bool _isPlaying = false;
+  VoidCallback? _listener;
 
   factory TtsService() => _instance;
 
   TtsService._internal();
+
+  bool get isPlaying => _isPlaying;
+
+  void addListener(VoidCallback listener) {
+    _listener = listener;
+  }
+
+  void removeListener() {
+    _listener = null;
+  }
+
+  void _notifyListener() {
+    _listener?.call();
+  }
 
   Future<void> initialize({
     String language = 'en-US',
@@ -17,6 +33,21 @@ class TtsService {
       await _flutterTts.setLanguage(language);
       await _flutterTts.setSpeechRate(speed);
       await _flutterTts.setPitch(pitch);
+
+      await _flutterTts.setStartHandler(() {
+        _isPlaying = true;
+        _notifyListener();
+      });
+
+      await _flutterTts.setCompletionHandler(() {
+        _isPlaying = false;
+        _notifyListener();
+      });
+
+      await _flutterTts.setErrorHandler(() {
+        _isPlaying = false;
+        _notifyListener();
+      });
     } catch (e) {
       throw Exception('Failed to initialize TTS: $e');
     }
@@ -27,6 +58,7 @@ class TtsService {
       if (text.trim().isEmpty) return;
       await _flutterTts.speak(text);
     } catch (e) {
+      _isPlaying = false;
       throw Exception('Failed to speak text: $e');
     }
   }
@@ -34,6 +66,7 @@ class TtsService {
   Future<void> stop() async {
     try {
       await _flutterTts.stop();
+      _isPlaying = false;
     } catch (e) {
       throw Exception('Failed to stop TTS: $e');
     }
@@ -63,17 +96,10 @@ class TtsService {
     }
   }
 
-  Future<bool> isSpeaking() async {
-    try {
-      return await _flutterTts.isSpeaking;
-    } catch (e) {
-      return false;
-    }
-  }
-
   Future<void> dispose() async {
     try {
       await _flutterTts.stop();
+      _isPlaying = false;
       await _flutterTts.setLanguage('');
     } catch (e) {
       // Ignore errors during disposal

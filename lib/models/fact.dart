@@ -21,7 +21,7 @@ class Fact {
         spanishTranslation = map['spanish_translation'] as String,
         difficultyLevel = map['difficulty'] as String,
         publishDate = map['publish_date'] as String,
-        isRead = (map['is_read'] as int) == 1;
+        isRead = (map['is_read'] as int?) ?? 0 == 1,
 
   Map<String, dynamic> toMap() {
     return {

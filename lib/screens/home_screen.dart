@@ -16,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Fact? _currentFact;
   bool _isLoading = true;
-  bool _isSpeaking = false;
+  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -33,6 +33,14 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     });
+
+    _ttsService.addListener(_onTtsStateChange);
+  }
+
+  void _onTtsStateChange() {
+    if (mounted) {
+      setState(() => _isPlaying = _ttsService.isPlaying);
+    }
   }
 
   Future<void> _loadFact() async {
@@ -67,7 +75,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _speakFact() async {
     if (_currentFact == null) return;
-    setState(() => _isSpeaking = true);
     try {
       await _ttsService.speak(_currentFact!.englishText);
     } catch (e) {
@@ -75,10 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al reproducir audio: $e')),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSpeaking = false);
       }
     }
   }
@@ -215,7 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_currentFact == null) return [];
     final words = _currentFact!.englishText.split(RegExp(r'\s+'));
     return words.map((word) {
-      final cleaned = _cleanWord(word);
       return GestureDetector(
         onTap: () => _showWordDetail(word),
         child: Container(
@@ -241,6 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _ttsService.removeListener();
     _ttsService.dispose();
     super.dispose();
   }
@@ -260,9 +263,9 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: Icon(
-              _isSpeaking ? Icons.volume_off : Icons.volume_up,
+              _isPlaying ? Icons.volume_off : Icons.volume_up,
             ),
-            onPressed: _isSpeaking ? null : _speakFact,
+            onPressed: _isPlaying ? null : _speakFact,
             tooltip: 'Reproducir audio',
           ),
         ],
