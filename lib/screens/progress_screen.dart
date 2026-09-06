@@ -102,7 +102,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Bienvenido de nuevo,', style: TextStyle(color: Colors.white.withOpacity(0.87), fontSize: 16)),
+                const Text('Bienvenido de nuevo,', style: TextStyle(color: Colors.white70, fontSize: 16)),
                 const SizedBox(height: 4),
                 const Text('Maurisio', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
               ],
@@ -181,13 +181,13 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 if (_downloads.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text('No hay descargas previas.', style: TextStyle(color: Colors.white.withOpacity(0.54))),
+                    child: Text('No hay descargas previas.', style: TextStyle(color: Colors.white54)),
                   ),
                 ..._downloads.map((d) => GlassCard(
                   height: 60,
                   child: ListTile(
                     title: Text(d.dataPackageName, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
-                    subtitle: Text('${d.downloadDate} · ${d.wordCount} palabras', style: TextStyle(color: Colors.white.withOpacity(0.54))),
+                    subtitle: Text('${d.downloadDate} · ${d.wordCount} palabras', style: TextStyle(color: Colors.white54)),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => _deleteDownload(d.id!),
@@ -211,7 +211,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 const SizedBox(height: 12),
                 ..._tips.take(5).map((tip) => ListTile(
                   title: Text(tip.title, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
-                  subtitle: Text(tip.content, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withOpacity(0.54))),
+                  subtitle: Text(tip.content, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white54)),
                   leading: CircleAvatar(child: Text('${tip.category[0]}', style: const TextStyle(color: Colors.white))),
                 )),
               ],

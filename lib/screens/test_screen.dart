@@ -218,14 +218,14 @@ class _TestScreenState extends State<TestScreen> {
             height: 8,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white10,
               borderRadius: BorderRadius.circular(4),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: progressPercent,
-                backgroundColor: Colors.white.withOpacity(0.1),
+                backgroundColor: Colors.white10,
                 valueColor: AlwaysStoppedAnimation<Color>(progressColor),
               ),
             ),
@@ -259,9 +259,9 @@ class _TestScreenState extends State<TestScreen> {
                         filled: true,
                         fillColor: const Color(0xFF1C1C1E),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                        prefixIcon: const Icon(Icons.translate, color: Colors.white.withOpacity(0.54)),
+                        prefixIcon: const Icon(Icons.translate, color: Colors.white54),
                         errorText: _isAnswered && !_isCorrect ? 'Respuesta incorrecta' : null,
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.54)),
+                        hintStyle: TextStyle(color: Colors.white54),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       ),
                       style: const TextStyle(fontSize: 18, color: Colors.white),

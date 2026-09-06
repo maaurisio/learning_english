@@ -88,7 +88,7 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
                 final w = learnedWords[index];
                 return ListTile(
                   title: Text(w.wordEn, style: const TextStyle(fontSize: 18, color: Colors.white)),
-                  subtitle: Text(w.wordEs, style: TextStyle(color: Colors.white.withOpacity(0.54))),
+                  subtitle: Text(w.wordEs, style: TextStyle(color: Colors.white54)),
                   trailing: const Icon(Icons.check_circle, color: Colors.green),
                 );
               },
@@ -172,7 +172,7 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
         const SizedBox(height: 12),
         Text(
           word.pronunciation.isNotEmpty ? word.pronunciation : '',
-          style: TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.54), fontStyle: FontStyle.italic),
+          style: TextStyle(fontSize: 16, color: Colors.white54, fontStyle: FontStyle.italic),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),

@@ -81,9 +81,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: isSelected ? const Color(0xFF8A2BE2) : Colors.white.withOpacity(0.54), size: 26),
+          Icon(icon, color: isSelected ? const Color(0xFF8A2BE2) : Colors.white54, size: 26),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: isSelected ? const Color(0xFF8A2BE2) : Colors.white.withOpacity(0.54))),
+          Text(label, style: TextStyle(fontSize: 11, color: isSelected ? const Color(0xFF8A2BE2) : Colors.white54)),
         ],
       ),
     );
