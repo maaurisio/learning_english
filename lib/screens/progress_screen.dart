@@ -3,6 +3,7 @@ import 'package:learning_english/db/database_helper.dart';
 import 'package:learning_english/models/offline_download.dart';
 import 'package:learning_english/models/user_progress.dart';
 import 'package:learning_english/models/tip.dart';
+import 'package:learning_english/screens/home_screen.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -88,6 +89,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
     }
   }
 
+  void _navigateToScreen(String routeName) {
+    if (routeName == '/') {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushNamed(context, routeName);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,10 +105,38 @@ class _ProgressScreenState extends State<ProgressScreen> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-          tooltip: 'Volver',
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Colors.deepPurple),
+              child: const Text('Menú', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home, color: Colors.deepPurple),
+              title: const Text('Inicio'),
+              onTap: () => _navigateToScreen('/'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.menu_book, color: Colors.deepPurple),
+              title: const Text('Glosario'),
+              onTap: () => _navigateToScreen('/glossary'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.quiz, color: Colors.deepPurple),
+              title: const Text('Modo Test'),
+              onTap: () => _navigateToScreen('/test'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.exit_to_app, color: Colors.red),
+              title: const Text('Salir', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
         ),
       ),
       body: _isLoading

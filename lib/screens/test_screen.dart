@@ -100,9 +100,8 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   double _calculateDuration(String text) {
-    final length = text.length;
-    final duration = 5.0 + length * 0.5;
-    return duration.clamp(5.0, 25.0);
+    final duration = (text.length * 1.5).round() + 15;
+    return duration.clamp(15.0, 60.0);
   }
 
   void _advanceQuestion() {

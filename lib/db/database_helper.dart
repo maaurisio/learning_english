@@ -9,7 +9,7 @@ import 'package:learning_english/models/offline_download.dart';
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
 
   factory DatabaseHelper() => _instance;
 
@@ -39,6 +39,52 @@ class DatabaseHelper {
     }
     if (oldVersion < 3) {
       await db.execute('ALTER TABLE dictionary ADD COLUMN is_learned INTEGER DEFAULT 0');
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tips (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          category TEXT
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS offline_downloads (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          download_date TEXT NOT NULL,
+          data_package_name TEXT NOT NULL,
+          word_count INTEGER DEFAULT 0
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS user_progress (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          words_correct INTEGER DEFAULT 0,
+          total_tests INTEGER DEFAULT 0,
+          last_session_date TEXT
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS user_vocabulary (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          word TEXT NOT NULL,
+          translation TEXT NOT NULL,
+          next_review_date TEXT,
+          interval INTEGER,
+          ease_factor REAL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS dictionary_backup (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          word_en TEXT NOT NULL,
+          word_es TEXT NOT NULL,
+          pronunciation TEXT DEFAULT '',
+          audio_path TEXT,
+          is_learned INTEGER DEFAULT 0
+        )
+      ''');
     }
   }
 
