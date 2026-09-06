@@ -28,6 +28,7 @@ class TestScreenState extends State<TestScreen> {
   bool _isCorrect = false;
   bool _isLoading = true;
   bool _hasAnyData = false;
+  bool _glossaryPending = false;
   Timer? _timer;
   double _timeRemaining = 0;
   double _totalTime = 0;
@@ -48,11 +49,15 @@ class TestScreenState extends State<TestScreen> {
     _cancelTimer();
     try {
       final allWords = await _dbHelper.getAllWords();
-      final words = await _dbHelper.getUnlearnedWords();
+      final unswipedCount = await _dbHelper.getUnswipedWordsCount();
+      final List<Word> words = (allWords.isNotEmpty && unswipedCount > 0)
+          ? []
+          : await _dbHelper.getSwipedUnlearnedWords();
       if (mounted) {
         setState(() {
           _words = [...words]..shuffle(Random());
           _hasAnyData = allWords.isNotEmpty;
+          _glossaryPending = allWords.isNotEmpty && unswipedCount > 0;
           _currentIndex = 0;
           _wordsCorrect = 0;
           _totalTests = 0;
@@ -89,7 +94,6 @@ class TestScreenState extends State<TestScreen> {
     _userAnswer = '';
     _answerController.clear();
 
-    _ttsService.speak(word.wordEn);
     setState(() {});
 
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -224,6 +228,28 @@ class TestScreenState extends State<TestScreen> {
             SizedBox(height: 8),
             Text(
               'Ve a Inicio y pulsa "Descargar información del día"',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.white54),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_glossaryPending) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.style_outlined, size: 56, color: Colors.white54),
+            SizedBox(height: 16),
+            Text(
+              'Termina el glosario primero',
+              style: TextStyle(fontSize: 18, color: Colors.white),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Desliza todas las tarjetas del Glosario para habilitar el Test',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.white54),
             ),

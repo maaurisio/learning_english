@@ -11,7 +11,7 @@ import 'package:learning_english/models/verb.dart';
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
-  static const int _dbVersion = 6;
+  static const int _dbVersion = 7;
 
   factory DatabaseHelper() => _instance;
 
@@ -118,6 +118,9 @@ class DatabaseHelper {
         )
       ''');
     }
+    if (oldVersion < 7) {
+      await db.execute('ALTER TABLE dictionary ADD COLUMN is_swiped INTEGER DEFAULT 0');
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -139,7 +142,8 @@ class DatabaseHelper {
         word_es TEXT NOT NULL,
         pronunciation TEXT DEFAULT '',
         audio_path TEXT,
-        is_learned INTEGER DEFAULT 0
+        is_learned INTEGER DEFAULT 0,
+        is_swiped INTEGER DEFAULT 0
       )
     ''');
 
@@ -289,6 +293,29 @@ class DatabaseHelper {
   Future<void> markWordAsUnlearned(String wordEn) async {
     final db = await database;
     await db.update('dictionary', {'is_learned': 0}, where: 'LOWER(word_en) = ?', whereArgs: [wordEn.toLowerCase()]);
+  }
+
+  Future<void> markWordAsSwiped(String wordEn) async {
+    final db = await database;
+    await db.update('dictionary', {'is_swiped': 1}, where: 'LOWER(word_en) = ?', whereArgs: [wordEn.toLowerCase()]);
+  }
+
+  Future<int> getUnswipedWordsCount() async {
+    final db = await database;
+    final result = await db.rawQuery('SELECT COUNT(*) as cnt FROM dictionary WHERE is_swiped = 0');
+    return (result.first['cnt'] as int?) ?? 0;
+  }
+
+  Future<List<Word>> getUnswipedWords() async {
+    final db = await database;
+    final result = await db.query('dictionary', where: 'is_swiped = ?', whereArgs: [0]);
+    return result.map((map) => Word.fromMap(map)).toList();
+  }
+
+  Future<List<Word>> getSwipedUnlearnedWords() async {
+    final db = await database;
+    final result = await db.query('dictionary', where: 'is_swiped = ? AND is_learned = ?', whereArgs: [1, 0]);
+    return result.map((map) => Word.fromMap(map)).toList();
   }
 
   Future<List<Tip>> getAllTips() async {

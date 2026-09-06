@@ -5,6 +5,7 @@ class Word {
   final String pronunciation;
   final String? audioPath;
   final bool isLearned;
+  final bool isSwiped;
 
   Word({
     this.id,
@@ -13,6 +14,7 @@ class Word {
     required this.pronunciation,
     this.audioPath,
     this.isLearned = false,
+    this.isSwiped = false,
   });
 
   factory Word.fromMap(Map<String, dynamic> map) {
@@ -23,6 +25,7 @@ class Word {
       pronunciation: map['pronunciation'] as String,
       audioPath: map['audio_path'] as String?,
       isLearned: ((map['is_learned'] as int?) ?? 0) == 1,
+      isSwiped: ((map['is_swiped'] as int?) ?? 0) == 1,
     );
   }
 
@@ -34,6 +37,7 @@ class Word {
       'pronunciation': pronunciation,
       'audio_path': audioPath,
       'is_learned': isLearned ? 1 : 0,
+      'is_swiped': isSwiped ? 1 : 0,
     };
   }
 }

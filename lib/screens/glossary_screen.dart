@@ -23,6 +23,7 @@ class GlossaryScreenState extends State<GlossaryScreen>
   List<Word> _allWords = [];
   bool _isLoading = true;
   bool _hasAnyData = false;
+  bool _allSwiped = false;
   int _wordsCorrect = 0;
 
   Offset _dragOffset = Offset.zero;
@@ -59,13 +60,15 @@ class GlossaryScreenState extends State<GlossaryScreen>
     _exiting = false;
     setState(() => _isLoading = true);
     try {
-      final words = await _dbHelper.getUnlearnedWords();
+      final words = await _dbHelper.getUnswipedWords();
       final allWords = await _dbHelper.getAllWords();
+      final unswipedCount = await _dbHelper.getUnswipedWordsCount();
       if (mounted) {
         setState(() {
           _words = words.toList();
           _allWords = allWords.toList();
           _hasAnyData = allWords.isNotEmpty;
+          _allSwiped = allWords.isNotEmpty && unswipedCount == 0;
           _isLoading = false;
           _dragOffset = Offset.zero;
         });
@@ -102,9 +105,21 @@ class GlossaryScreenState extends State<GlossaryScreen>
       _markAsLearned(word);
       setState(() => _wordsCorrect++);
     }
+    _dbHelper.markWordAsSwiped(word.wordEn).then((_) {
+      if (mounted) _refreshCompletionState();
+    });
     _dragOffset = Offset.zero;
     _exiting = false;
     setState(() {});
+  }
+
+  Future<void> _refreshCompletionState() async {
+    try {
+      final unswipedCount = await _dbHelper.getUnswipedWordsCount();
+      if (mounted && unswipedCount == 0 && !_allSwiped) {
+        setState(() => _allSwiped = true);
+      }
+    } catch (e) {}
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
@@ -218,31 +233,61 @@ class GlossaryScreenState extends State<GlossaryScreen>
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: GlassCard(
-                      child: ListTile(
-                        title: Text(v.base, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                        subtitle: Column(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 4),
-                            Text(
-                              'Presente: ${v.present}  •  Pasado: ${v.past}  •  Futuro: ${v.future}',
-                              style: const TextStyle(fontSize: 13, color: Color(0xFF00E5FF)),
+                            Row(
+                              children: [
+                                Text(v.base, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                                const SizedBox(width: 8),
+                                Text('· ${v.translation}', style: const TextStyle(fontSize: 13, color: Colors.white54)),
+                                const Spacer(),
+                                IconButton(
+                                  icon: const Icon(Icons.volume_up, color: Color(0xFF8A2BE2), size: 30),
+                                  onPressed: () => _speakWord(v.base),
+                                  tooltip: 'Escuchar',
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 2),
-                            Text('Traducción: ${v.translation}', style: const TextStyle(color: Colors.white54)),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                _buildTenseColumn('Pasado', v.past),
+                                const SizedBox(width: 10),
+                                _buildTenseColumn('Presente', v.present),
+                                const SizedBox(width: 10),
+                                _buildTenseColumn('Futuro', v.future),
+                              ],
+                            ),
                           ],
-                        ),
-                        isThreeLine: true,
-                        leading: IconButton(
-                          icon: const Icon(Icons.volume_up, color: Color(0xFF8A2BE2)),
-                          onPressed: () => _speakWord(v.base),
-                          tooltip: 'Escuchar',
                         ),
                       ),
                     ),
                   );
                 },
               ),
+      ),
+    );
+  }
+
+  Widget _buildTenseColumn(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withOpacity(0.10)),
+        ),
+        child: Column(
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, color: Colors.white54)),
+            const SizedBox(height: 6),
+            Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF00E5FF))),
+          ],
+        ),
       ),
     );
   }
@@ -315,6 +360,39 @@ class GlossaryScreenState extends State<GlossaryScreen>
                     'Ve a Inicio y pulsa "Descargar información del día"',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, color: Colors.white54),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (_allSwiped)
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.celebration, size: 56, color: Color(0xFF8A2BE2)),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '¡Glosario completado!',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Deslizaste todas las tarjetas.\nAhora revisa la lista y los verbos,\no ve a la pestaña Test para practicar.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14, color: Colors.white54),
+                  ),
+                  const SizedBox(height: 24),
+                  OutlinedButton.icon(
+                    onPressed: _showWordList,
+                    icon: const Icon(Icons.list),
+                    label: const Text('Ver lista'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF8A2BE2),
+                      side: const BorderSide(color: Color(0xFF8A2BE2)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    ),
                   ),
                 ],
               ),
