@@ -81,14 +81,14 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
     showModalBottomSheet(
       context: context,
       builder: (context) => learnedWords.isEmpty
-          ? const Center(child: Text('No hay palabras aprendidas aún'))
+          ? const Center(child: Text('No hay palabras aprendidas aún', style: TextStyle(color: Colors.white)))
           : ListView.builder(
               itemCount: learnedWords.length,
               itemBuilder: (context, index) {
                 final w = learnedWords[index];
                 return ListTile(
-                  title: Text(w.wordEn, style: const TextStyle(fontSize: 18)),
-                  subtitle: Text(w.wordEs, style: TextStyle(color: Colors.white70)),
+                  title: Text(w.wordEn, style: const TextStyle(fontSize: 18, color: Colors.white)),
+                  subtitle: Text(w.wordEs, style: TextStyle(color: Colors.white.withOpacity(0.54))),
                   trailing: const Icon(Icons.check_circle, color: Colors.green),
                 );
               },
@@ -109,10 +109,10 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
     }
 
     if (_words.isEmpty) {
-      return Center(
+      return const Center(
         child: Text(
           'No hay palabras pendientes',
-          style: TextStyle(fontSize: 18, color: Colors.white54),
+          style: TextStyle(fontSize: 18, color: Colors.white),
         ),
       );
     }
@@ -172,7 +172,7 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
         const SizedBox(height: 12),
         Text(
           word.pronunciation.isNotEmpty ? word.pronunciation : '',
-          style: TextStyle(fontSize: 16, color: Colors.white54, fontStyle: FontStyle.italic),
+          style: TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.54), fontStyle: FontStyle.italic),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
