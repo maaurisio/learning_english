@@ -24,7 +24,6 @@ class _TestScreenState extends State<TestScreen> {
   bool _isAnswered = false;
   bool _isCorrect = false;
   bool _isLoading = true;
-  bool _timeUp = false;
   Timer? _timer;
   double _timeRemaining = 0;
   double _totalTime = 0;
@@ -48,7 +47,6 @@ class _TestScreenState extends State<TestScreen> {
           _isLoading = false;
           _isAnswered = false;
           _isCorrect = false;
-          _timeUp = false;
           _userAnswer = '';
         });
         _startNextQuestion();
@@ -83,11 +81,9 @@ class _TestScreenState extends State<TestScreen> {
     _timeRemaining = _totalTime;
     _isAnswered = false;
     _isCorrect = false;
-    _timeUp = false;
     _userAnswer = '';
 
     _ttsService.speak(word.wordEn);
-
     setState(() {});
 
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -97,7 +93,6 @@ class _TestScreenState extends State<TestScreen> {
         if (_timeRemaining <= 0) {
           _timeRemaining = 0;
           _timer?.cancel();
-          _timeUp = true;
           _advanceQuestion();
         }
       });
@@ -106,8 +101,8 @@ class _TestScreenState extends State<TestScreen> {
 
   double _calculateDuration(String text) {
     final length = text.length;
-    final duration = 2.0 + length * 0.3;
-    return duration.clamp(3.0, 15.0);
+    final duration = 5.0 + length * 0.5;
+    return duration.clamp(5.0, 25.0);
   }
 
   void _advanceQuestion() {
@@ -142,10 +137,8 @@ class _TestScreenState extends State<TestScreen> {
         _isCorrect = false;
       }
 
-      // Guardar progreso
       _saveProgress();
 
-      // Avanzar después de un breve retraso
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) _advanceQuestion();
       });
@@ -166,9 +159,7 @@ class _TestScreenState extends State<TestScreen> {
       } else {
         await _dbHelper.insertUserProgress(progress);
       }
-    } catch (e) {
-      // Silently handle error
-    }
+    } catch (e) {}
   }
 
   void _cancelTimer() {
@@ -225,42 +216,38 @@ class _TestScreenState extends State<TestScreen> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            _cancelTimer();
+            Navigator.pop(context);
+          },
+          tooltip: 'Volver',
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(
-              '${_currentIndex + 1}/${_words.length}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            child: Text('${_currentIndex + 1}/${_words.length}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
       body: Column(
         children: [
-          // Timer bar
           AnimatedContainer(
             duration: const Duration(milliseconds: 100),
-            height: 8,
+            height: 10,
             width: double.infinity,
             color: Colors.grey[300],
             child: LinearProgressIndicator(
               value: progressPercent,
               backgroundColor: Colors.grey[300],
               valueColor: AlwaysStoppedAnimation<Color>(
-                progressPercent > 0.3
-                    ? Colors.green
-                    : progressPercent > 0.15
-                        ? Colors.orange
-                        : Colors.red,
+                progressPercent > 0.3 ? Colors.green : progressPercent > 0.15 ? Colors.orange : Colors.red,
               ),
             ),
           ),
-          Text(
-            '${(_timeRemaining).toStringAsFixed(1)}s',
-            style: TextStyle(fontSize: 12, color: progressPercent > 0.3 ? Colors.green : Colors.orange),
-          ),
+          Text('${_timeRemaining.toStringAsFixed(1)}s', style: TextStyle(fontSize: 12, color: progressPercent > 0.3 ? Colors.green : Colors.orange)),
 
-          // Word display
           Expanded(
             child: Center(
               child: Padding(
@@ -274,10 +261,7 @@ class _TestScreenState extends State<TestScreen> {
                         color: Colors.deepPurple.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        word.wordEn,
-                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                      ),
+                      child: Text(word.wordEn, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
                     ),
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
@@ -287,8 +271,6 @@ class _TestScreenState extends State<TestScreen> {
                       style: ElevatedButton.styleFrom(foregroundColor: Colors.white, backgroundColor: Colors.deepPurple),
                     ),
                     const SizedBox(height: 32),
-
-                    // Answer field
                     TextField(
                       enabled: !_isAnswered,
                       decoration: InputDecoration(
@@ -305,25 +287,16 @@ class _TestScreenState extends State<TestScreen> {
                       onSubmitted: _isAnswered ? null : (value) => _checkAnswer(),
                     ),
                     const SizedBox(height: 16),
-
-                    // Submit button
                     if (!_isAnswered)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: _userAnswer.trim().isEmpty ? null : _checkAnswer,
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.deepPurple,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
+                          style: ElevatedButton.styleFrom(foregroundColor: Colors.white, backgroundColor: Colors.deepPurple, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                           child: const Text('Validar Respuesta', style: TextStyle(fontSize: 18)),
                         ),
                       ),
                     const SizedBox(height: 16),
-
-                    // Feedback
                     if (_isAnswered)
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -336,10 +309,7 @@ class _TestScreenState extends State<TestScreen> {
                           children: [
                             Icon(_isCorrect ? Icons.check_circle : Icons.cancel, color: _isCorrect ? Colors.green : Colors.red),
                             const SizedBox(width: 8),
-                            Text(
-                              _isCorrect ? '¡Correcto! 🎉' : 'Correcto: ${word.wordEs}',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _isCorrect ? Colors.green : Colors.red),
-                            ),
+                            Text(_isCorrect ? '¡Correcto! 🎉' : 'Correcto: ${word.wordEs}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _isCorrect ? Colors.green : Colors.red)),
                           ],
                         ),
                       ),
@@ -348,8 +318,6 @@ class _TestScreenState extends State<TestScreen> {
               ),
             ),
           ),
-
-          // Progress indicator
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             color: Colors.deepPurple.withOpacity(0.05),

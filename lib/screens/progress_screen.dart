@@ -41,9 +41,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar datos: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al cargar datos: $e')));
       }
     }
   }
@@ -52,16 +50,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
     try {
       await _dbHelper.seedInitialData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Datos descargados exitosamente ✅')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Datos descargados exitosamente ✅')));
         await _loadData();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al descargar datos: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al descargar datos: $e')));
       }
     }
   }
@@ -71,15 +65,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
       await _dbHelper.deleteOfflineDownload(id);
       if (mounted) {
         await _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contenido eliminado ✅')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Contenido eliminado ✅')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar contenido: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al eliminar contenido: $e')));
       }
     }
   }
@@ -89,15 +79,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
       await _dbHelper.resetUserProgress();
       if (mounted) {
         await _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Progreso reiniciado ✅')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Progreso reiniciado ✅')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al reiniciar progreso: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al reiniciar progreso: $e')));
       }
     }
   }
@@ -110,6 +96,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Volver',
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -118,7 +109,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Estadísticas
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -127,16 +117,13 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Estadísticas de Progreso',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
+                          const Text('Estadísticas de Progreso', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _statCard('Palabras Correctas', '${_progress?.wordsCorrect ?? 0}', Colors.green),
-                              _statCard('Tests Realizados', '${_progress?.totalTests ?? 0}', Colors.blue),
+                              _statCard('Correctas', '${_progress?.wordsCorrect ?? 0}', Colors.green),
+                              _statCard('Tests', '${_progress?.totalTests ?? 0}', Colors.blue),
                             ],
                           ),
                         ],
@@ -145,7 +132,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Gestión de datos
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -154,10 +140,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Gestión de Contenido Offline',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
+                          const Text('Gestión de Contenido Offline', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 16),
                           SizedBox(
                             width: double.infinity,
@@ -166,39 +149,39 @@ class _ProgressScreenState extends State<ProgressScreen> {
                               icon: const Icon(Icons.download),
                               label: const Text('Descargar información del día'),
                               style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                backgroundColor: Colors.deepPurple,
+                                foregroundColor: Colors.white, backgroundColor: Colors.deepPurple,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Descargas anteriores (${_downloads.length}):',
-                            style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w600),
-                          ),
+                          const SizedBox(height: 16),
+                          Text('Descargas (${_downloads.length}):', style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w600)),
                           const SizedBox(height: 8),
-                          ..._downloads.map((d) => ListTile(
-                            title: Text(d.dataPackageName),
-                            subtitle: Text('${d.downloadDate} · ${d.wordCount} palabras'),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deleteDownload(d.id!),
-                            ),
-                          )),
                           if (_downloads.isEmpty)
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 8.0),
                               child: Text('No hay descargas previas.', style: TextStyle(color: Colors.grey)),
                             ),
+                          ..._downloads.map((d) => Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            child: ListTile(
+                              title: Text(d.dataPackageName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                              subtitle: Text('${d.downloadDate} · ${d.wordCount} palabras'),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _deleteDownload(d.id!),
+                                tooltip: 'Borrar',
+                              ),
+                            ),
+                          )),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
 
-                  // Tips de aprendizaje
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -207,10 +190,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Píldoras de Conocimiento (${_tips.length})',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
+                          const Text('Píldoras de Conocimiento (${_tips.length})', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 12),
                           ..._tips.take(5).map((tip) => ListTile(
                             title: Text(tip.title, style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -223,7 +203,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Botón de reinicio
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(

@@ -9,7 +9,7 @@ import 'package:learning_english/models/offline_download.dart';
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3;
 
   factory DatabaseHelper() => _instance;
 
@@ -34,12 +34,11 @@ class DatabaseHelper {
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('''
-        ALTER TABLE dictionary ADD COLUMN pronunciation TEXT DEFAULT ''
-      ''');
-      await db.execute('''
-        ALTER TABLE dictionary ADD COLUMN audio_path TEXT
-      ''');
+      await db.execute('ALTER TABLE dictionary ADD COLUMN pronunciation TEXT DEFAULT \'\'');
+      await db.execute('ALTER TABLE dictionary ADD COLUMN audio_path TEXT');
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE dictionary ADD COLUMN is_learned INTEGER DEFAULT 0');
     }
   }
 
@@ -61,7 +60,8 @@ class DatabaseHelper {
         word_en TEXT NOT NULL,
         word_es TEXT NOT NULL,
         pronunciation TEXT DEFAULT '',
-        audio_path TEXT
+        audio_path TEXT,
+        is_learned INTEGER DEFAULT 0
       )
     ''');
 
@@ -126,22 +126,13 @@ class DatabaseHelper {
 
   Future<List<Fact>> getUnreadFacts() async {
     final db = await database;
-    final result = await db.query(
-      'daily_facts',
-      where: 'is_read = ?',
-      whereArgs: [0],
-    );
+    final result = await db.query('daily_facts', where: 'is_read = ?', whereArgs: [0]);
     return result.map((map) => Fact.fromMap(map)).toList();
   }
 
   Future<void> markFactAsRead(int id) async {
     final db = await database;
-    await db.update(
-      'daily_facts',
-      {'is_read': 1},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.update('daily_facts', {'is_read': 1}, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<Word>> getAllWords() async {
@@ -150,33 +141,47 @@ class DatabaseHelper {
     return result.map((map) => Word.fromMap(map)).toList();
   }
 
+  Future<List<Word>> getUnlearnedWords() async {
+    final db = await database;
+    final result = await db.query('dictionary', where: 'is_learned = ?', whereArgs: [0]);
+    return result.map((map) => Word.fromMap(map)).toList();
+  }
+
+  Future<List<Word>> getLearnedWords() async {
+    final db = await database;
+    final result = await db.query('dictionary', where: 'is_learned = ?', whereArgs: [1]);
+    return result.map((map) => Word.fromMap(map)).toList();
+  }
+
   Future<int> insertWord(Word word) async {
     final db = await database;
-    return await db.insert('dictionary', word.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert('dictionary', word.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<int> insertWords(List<Word> words) async {
     final db = await database;
     int count = 0;
     for (var word in words) {
-      count += await db.insert('dictionary', word.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      count += await db.insert('dictionary', word.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
     }
     return count;
   }
 
   Future<Word?> lookupWord(String wordEn) async {
     final db = await database;
-    final result = await db.query(
-      'dictionary',
-      where: 'LOWER(word_en) = ?',
-      whereArgs: [wordEn.toLowerCase()],
-    );
-    if (result.isNotEmpty) {
-      return Word.fromMap(result.first);
-    }
+    final result = await db.query('dictionary', where: 'LOWER(word_en) = ?', whereArgs: [wordEn.toLowerCase()]);
+    if (result.isNotEmpty) return Word.fromMap(result.first);
     return null;
+  }
+
+  Future<void> markWordAsLearned(String wordEn) async {
+    final db = await database;
+    await db.update('dictionary', {'is_learned': 1}, where: 'LOWER(word_en) = ?', whereArgs: [wordEn.toLowerCase()]);
+  }
+
+  Future<void> markWordAsUnlearned(String wordEn) async {
+    final db = await database;
+    await db.update('dictionary', {'is_learned': 0}, where: 'LOWER(word_en) = ?', whereArgs: [wordEn.toLowerCase()]);
   }
 
   Future<List<Tip>> getAllTips() async {
@@ -187,65 +192,49 @@ class DatabaseHelper {
 
   Future<int> insertTip(Tip tip) async {
     final db = await database;
-    return await db.insert('tips', tip.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert('tips', tip.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<int> insertTips(List<Tip> tips) async {
     final db = await database;
     int count = 0;
     for (var tip in tips) {
-      count += await db.insert('tips', tip.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      count += await db.insert('tips', tip.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
     }
     return count;
   }
 
   Future<List<OfflineDownload>> getOfflineDownloads() async {
     final db = await database;
-    final result = await db.query('offline_downloads',
-        orderBy: 'download_date DESC');
+    final result = await db.query('offline_downloads', orderBy: 'download_date DESC');
     return result.map((map) => OfflineDownload.fromMap(map)).toList();
   }
 
   Future<int> insertOfflineDownload(OfflineDownload download) async {
     final db = await database;
-    return await db.insert('offline_downloads', download.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert('offline_downloads', download.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> deleteOfflineDownload(int id) async {
     final db = await database;
-    await db.delete(
-      'offline_downloads',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('offline_downloads', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<UserProgress?> getUserProgress() async {
     final db = await database;
     final result = await db.query('user_progress');
-    if (result.isNotEmpty) {
-      return UserProgress.fromMap(result.first);
-    }
+    if (result.isNotEmpty) return UserProgress.fromMap(result.first);
     return null;
   }
 
   Future<int> insertUserProgress(UserProgress progress) async {
     final db = await database;
-    return await db.insert('user_progress', progress.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert('user_progress', progress.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<int> updateUserProgress(UserProgress progress) async {
     final db = await database;
-    return await db.update(
-      'user_progress',
-      progress.toMap(),
-      where: 'id = ?',
-      whereArgs: [progress.id],
-    );
+    return await db.update('user_progress', progress.toMap(), where: 'id = ?', whereArgs: [progress.id]);
   }
 
   Future<void> resetUserProgress() async {
@@ -270,8 +259,7 @@ class DatabaseHelper {
 
   Future<int> insertUserVocabulary(Map<String, dynamic> entry) async {
     final db = await database;
-    return await db.insert('user_vocabulary', entry,
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert('user_vocabulary', entry, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> seedInitialData() async {
@@ -371,7 +359,7 @@ class DatabaseHelper {
     await insertWords(wordList);
 
     final tips = <Tip>[
-      Tip(title: 'Memoria Espaciada', content: 'Repasa las palabras en intervalos crecientes: 1 día, 3 días, 7 días, 14 días. Esto refuerza la memoria a largo plazo.', category: 'Study'),
+      Tip(title: 'Memoria Espaciada', content: 'Repasa las palabras en intervalos crecientes: 1 día, 3 días, 7 días, 14 días.', category: 'Study'),
       Tip(title: 'Inmersión Diaria', content: 'Escucha inglés al menos 15 minutos al día. La constancia supera a la intensidad.', category: 'Listening'),
       Tip(title: 'Aprende en Contexto', content: 'No memorices palabras aisladas. Aprende frases completas y oraciones reales.', category: 'Vocabulary'),
       Tip(title: 'Práctica Activa', content: 'Escribe y habla las palabras en voz alta. La activación motora refuerza el aprendizaje.', category: 'Speaking'),
@@ -380,7 +368,7 @@ class DatabaseHelper {
       Tip(title: 'Flashcards Inteligentes', content: 'Usa repetición espaciada. Si aciertas, aumenta el intervalo. Si fallas, repite pronto.', category: 'Study'),
       Tip(title: 'Consume Contenido Real', content: 'Lee noticias, escucha podcasts y mira series en inglés. El lenguaje real es más memorable.', category: 'Immersion'),
       Tip(title: 'Meta Semanal', content: 'Establece 5-10 palabras nuevas por semana. Pequeñas metas son más sostenibles.', category: 'Goal'),
-      Tip(title: 'Revisa y Conecta', content: 'Conecta palabras nuevas con imágenes, emociones o historias personales para mayor retención.', category: 'Memory'),
+      Tip(title: 'Revisa y Conecta', content: 'Conecta palabras nuevas con imágenes, emociones o historias personales.', category: 'Memory'),
     ];
 
     await insertTips(tips);

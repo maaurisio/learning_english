@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:learning_english/db/database_helper.dart';
 import 'package:learning_english/models/fact.dart';
-import 'package:learning_english/models/offline_download.dart';
-import 'package:learning_english/models/tip.dart';
-import 'package:learning_english/models/user_progress.dart';
 import 'package:learning_english/services/tts_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -35,6 +33,22 @@ class _HomeScreenState extends State<HomeScreen> {
     _ttsService.addListener(_onTtsStateChange);
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  Future<void> _refreshData() async {
+    try {
+      final facts = await _dbHelper.getAllFacts();
+      if (mounted && facts.isNotEmpty) {
+        setState(() => _currentFact = facts.first);
+      }
+    } catch (e) {
+      // Silently handle
+    }
+  }
+
   void _onTtsStateChange() {
     if (mounted) {
       setState(() => _isPlaying = _ttsService.isPlaying);
@@ -48,9 +62,9 @@ class _HomeScreenState extends State<HomeScreen> {
       if (facts.isEmpty) {
         await _dbHelper.seedInitialData();
         final factsAfter = await _dbHelper.getAllFacts();
-        setState(() => _currentFact = factsAfter.isNotEmpty ? factsAfter.first : null);
+        if (mounted) setState(() => _currentFact = factsAfter.isNotEmpty ? factsAfter.first : null);
       } else {
-        setState(() => _currentFact = facts.first);
+        if (mounted) setState(() => _currentFact = facts.first);
       }
     } catch (e) {
       if (mounted) {
@@ -59,9 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -103,27 +115,15 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                wordEn,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+              Text(wordEn, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               if (pronunciation.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(
-                  pronunciation,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600], fontStyle: FontStyle.italic),
-                ),
+                Text(pronunciation, style: TextStyle(fontSize: 14, color: Colors.grey[600], fontStyle: FontStyle.italic)),
               ],
               const Divider(height: 24),
-              Text(
-                'Traducción:',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
-              ),
+              Text('Traducción:', style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text(
-                wordEs,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-              ),
+              Text(wordEs, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
               const SizedBox(height: 16),
               if (canAddToVocab)
                 SizedBox(
@@ -136,8 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: const Icon(Icons.add_circle_outline),
                     label: const Text('Añadir a Flashcards'),
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white, backgroundColor: Colors.deepPurple,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -146,10 +145,8 @@ class _HomeScreenState extends State<HomeScreen> {
               if (!canAddToVocab)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    'Esta palabra no está en el diccionario local.',
-                    style: TextStyle(fontSize: 14, color: Colors.orange[700], fontStyle: FontStyle.italic),
-                  ),
+                  child: Text('Esta palabra no está en el diccionario local.',
+                    style: TextStyle(fontSize: 14, color: Colors.orange[700], fontStyle: FontStyle.italic)),
                 ),
             ],
           ),
@@ -161,13 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _addToVocabulary(String wordEn, String wordEs) async {
     try {
       final now = DateTime.now();
-      final entry = {
-        'word': wordEn,
-        'translation': wordEs,
-        'next_review_date': now.toIso8601String(),
-        'interval': 0,
-        'ease_factor': 2.5,
-      };
+      final entry = {'word': wordEn, 'translation': wordEs, 'next_review_date': now.toIso8601String(), 'interval': 0, 'ease_factor': 2.5};
       await _dbHelper.insertUserVocabulary(entry);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -197,10 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
             border: Border.all(color: Colors.deepPurple.withOpacity(0.3)),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text(
-            word,
-            style: const TextStyle(fontSize: 16, color: Colors.deepPurple, fontWeight: FontWeight.w500),
-          ),
+          child: Text(word, style: const TextStyle(fontSize: 16, color: Colors.deepPurple, fontWeight: FontWeight.w500)),
         ),
       );
     }).toList();
@@ -216,6 +204,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToScreen(String routeName) {
     Navigator.pop(context);
     Navigator.pushNamed(context, routeName);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshData());
+  }
+
+  void _exitApp() {
+    SystemNavigator.pop();
   }
 
   @override
@@ -240,41 +233,17 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.deepPurple,
-              ),
-              child: const Text(
-                'Menú',
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+              decoration: const BoxDecoration(color: Colors.deepPurple),
+              child: const Text('Menú', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
             ),
-            ListTile(
-              leading: const Icon(Icons.home, color: Colors.deepPurple),
-              title: const Text('Inicio'),
-              onTap: () => _navigateToScreen('/'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.bar_chart, color: Colors.deepPurple),
-              title: const Text('Progresos y Datos'),
-              onTap: () => _navigateToScreen('/progress'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.menu_book, color: Colors.deepPurple),
-              title: const Text('Glosario'),
-              onTap: () => _navigateToScreen('/glossary'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.quiz, color: Colors.deepPurple),
-              title: const Text('Modo Test'),
-              onTap: () => _navigateToScreen('/test'),
-            ),
-            const Divider(),
+            _drawerItem(Icons.home, 'Inicio', '/'),
+            _drawerItem(Icons.bar_chart, 'Progresos y Datos', '/progress'),
+            _drawerItem(Icons.menu_book, 'Glosario', '/glossary'),
+            _drawerItem(Icons.quiz, 'Modo Test', '/test'),
             ListTile(
               leading: const Icon(Icons.exit_to_app, color: Colors.red),
-              title: const Text('Salir'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              title: const Text('Salir', style: TextStyle(color: Colors.red)),
+              onTap: _exitApp,
             ),
           ],
         ),
@@ -287,12 +256,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (_currentFact != null) ...[
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      shadowColor: Colors.deepPurple.withOpacity(0.15),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [Colors.deepPurple, Colors.deepPurpleAccent]),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       child: Padding(
-                        padding: const EdgeInsets.all(20.0),
+                        padding: const EdgeInsets.all(24.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -300,43 +270,58 @@ class _HomeScreenState extends State<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Colors.deepPurple,
+                                    color: Colors.white.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child: Text(
-                                    _currentFact!.difficultyLevel,
-                                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                                  ),
+                                  child: Text(_currentFact!.difficultyLevel,
+                                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                                 ),
                                 if (_currentFact!.isRead)
-                                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                  const Icon(Icons.check_circle, color: Colors.green, size: 22),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            Wrap(children: _buildWordChips()),
                             const SizedBox(height: 20),
-                            const Divider(),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Traducción:',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                            ),
+                            Wrap(children: _buildWordChips()),
+                            const SizedBox(height: 24),
+                            const Divider(color: Colors.white70),
+                            const SizedBox(height: 12),
+                            Text('Traducción:', style: TextStyle(fontSize: 13, color: Colors.white70, fontWeight: FontWeight.w600)),
                             const SizedBox(height: 4),
-                            Text(
-                              _currentFact!.spanishTranslation,
-                              style: TextStyle(fontSize: 16, color: Colors.grey[800], fontStyle: FontStyle.italic),
-                            ),
+                            Text(_currentFact!.spanishTranslation,
+                              style: const TextStyle(fontSize: 17, color: Colors.white, fontStyle: FontStyle.italic)),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                   ],
+                  if (_currentFact != null)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _speakFact,
+                        icon: const Icon(Icons.volume_up),
+                        label: const Text('Escuchar en voz alta'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.deepPurple,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _drawerItem(IconData icon, String title, String route) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.deepPurple),
+      title: Text(title, style: const TextStyle(fontSize: 16)),
+      onTap: () => _navigateToScreen(route),
     );
   }
 }
