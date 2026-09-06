@@ -14,17 +14,39 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  static const List<Widget> _screens = [
-    ProgressScreen(),
-    GlossaryScreen(),
-    TestScreen(),
-  ];
+  final _glossaryKey = GlobalKey<GlossaryScreenState>();
+  final _testKey = GlobalKey<TestScreenState>();
 
+  late final List<Widget> _screens;
   static const List<String> _titles = [
     'Progresos y Datos',
     'Glosario Interactivo',
     'Test de Traducción',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const ProgressScreen(),
+      GlossaryScreen(key: _glossaryKey),
+      TestScreen(key: _testKey),
+    ];
+  }
+
+  void _onTabSelected(int index) {
+    setState(() {
+      _currentIndex = index;
+      switch (index) {
+        case 1:
+          _glossaryKey.currentState?.reload();
+          break;
+        case 2:
+          _testKey.currentState?.reload();
+          break;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,11 +95,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget _bottomNavItem(IconData icon, String label, int index) {
     final isSelected = _currentIndex == index;
     return GestureDetector(
-      onTap: () {
-        if (mounted) {
-          setState(() => _currentIndex = index);
-        }
-      },
+      onTap: () => _onTabSelected(index),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

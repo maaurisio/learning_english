@@ -10,15 +10,16 @@ class GlossaryScreen extends StatefulWidget {
   const GlossaryScreen({super.key});
 
   @override
-  State<GlossaryScreen> createState() => _GlossaryScreenState();
+  GlossaryScreenState createState() => GlossaryScreenState();
 }
 
-class _GlossaryScreenState extends State<GlossaryScreen> {
+class GlossaryScreenState extends State<GlossaryScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final TtsService _ttsService = TtsService();
 
   List<Word> _words = [];
   bool _isLoading = true;
+  bool _hasAnyData = false;
   int _wordsCorrect = 0;
 
   @override
@@ -27,14 +28,20 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
     _loadWords();
   }
 
+  void reload() {
+    _loadWords();
+  }
+
   Future<void> _loadWords() async {
     setState(() => _isLoading = true);
     try {
       final progress = await _dbHelper.getUserProgress();
       final words = await _dbHelper.getUnlearnedWords();
+      final allWords = await _dbHelper.getAllWords();
       if (mounted) {
         setState(() {
           _words = words.toList();
+          _hasAnyData = allWords.isNotEmpty;
           _isLoading = false;
           _wordsCorrect = progress?.wordsCorrect ?? 0;
         });
@@ -109,10 +116,30 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
     }
 
     if (_words.isEmpty) {
-      return const Center(
-        child: Text(
-          'No hay palabras pendientes',
-          style: TextStyle(fontSize: 18, color: Colors.white),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _hasAnyData ? Icons.check_circle_outline : Icons.cloud_download_outlined,
+              size: 56,
+              color: Colors.white54,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _hasAnyData
+                  ? 'No hay palabras pendientes'
+                  : 'No hay contenido descargado',
+              style: const TextStyle(fontSize: 18, color: Colors.white),
+            ),
+            const SizedBox(height: 8),
+            if (!_hasAnyData)
+              const Text(
+                'Ve a Inicio y pulsa "Descargar información del día"',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.white54),
+              ),
+          ],
         ),
       );
     }

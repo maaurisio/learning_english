@@ -11,10 +11,10 @@ class TestScreen extends StatefulWidget {
   const TestScreen({super.key});
 
   @override
-  State<TestScreen> createState() => _TestScreenState();
+  TestScreenState createState() => TestScreenState();
 }
 
-class _TestScreenState extends State<TestScreen> {
+class TestScreenState extends State<TestScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final TtsService _ttsService = TtsService();
 
@@ -26,6 +26,7 @@ class _TestScreenState extends State<TestScreen> {
   bool _isAnswered = false;
   bool _isCorrect = false;
   bool _isLoading = true;
+  bool _hasAnyData = false;
   Timer? _timer;
   double _timeRemaining = 0;
   double _totalTime = 0;
@@ -36,8 +37,14 @@ class _TestScreenState extends State<TestScreen> {
     _loadWords();
   }
 
+  void reload() {
+    _isLoading = true;
+    _loadWords();
+  }
+
   Future<void> _loadWords() async {
     setState(() => _isLoading = true);
+    _cancelTimer();
     try {
       final words = await _dbHelper.getAllWords();
       if (mounted && words.isNotEmpty) {
@@ -50,10 +57,15 @@ class _TestScreenState extends State<TestScreen> {
           _isAnswered = false;
           _isCorrect = false;
           _userAnswer = '';
+          _hasAnyData = true;
         });
         _startNextQuestion();
       } else {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _hasAnyData = false;
+          _words = [];
+        });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No hay palabras en el glosario. Descarga datos primero.')),
@@ -201,8 +213,30 @@ class _TestScreenState extends State<TestScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading || _words.isEmpty) {
+    if (_isLoading) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+
+    if (!_hasAnyData || _words.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_download_outlined, size: 56, color: Colors.white54),
+            SizedBox(height: 16),
+            Text(
+              'No hay contenido descargado',
+              style: TextStyle(fontSize: 18, color: Colors.white),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Ve a Inicio y pulsa "Descargar información del día"',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.white54),
+            ),
+          ],
+        ),
+      );
     }
 
     final word = _words[_currentIndex];
