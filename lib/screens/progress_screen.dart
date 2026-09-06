@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:learning_english/db/database_helper.dart';
@@ -200,7 +201,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: _downloadData,
-                              icon: const Icon(CupertinoIcons.download),
+                              icon: const Icon(Icons.download),
                               label: const Text('Descargar información del día'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF8A2BE2),
