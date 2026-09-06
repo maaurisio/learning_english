@@ -22,11 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadFact();
-    _ttsService.initialize(
-      language: 'en-US',
-      speed: 0.5,
-      pitch: 1.0,
-    ).catchError((e) {
+    _ttsService.init().catchError((e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al inicializar TTS: $e')),
@@ -244,7 +240,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _ttsService.removeListener();
-    _ttsService.dispose();
     super.dispose();
   }
 
