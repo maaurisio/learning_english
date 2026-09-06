@@ -202,40 +202,16 @@ class _TestScreenState extends State<TestScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading || _words.isEmpty) {
-      return Scaffold(
-        backgroundColor: Colors.black,
-        appBar: AppBar(title: const Text('Modo Test', style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: Colors.transparent, foregroundColor: Colors.white, elevation: 0),
-        body: const Center(child: CircularProgressIndicator()),
-      );
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
     }
 
     final word = _words[_currentIndex];
     final progressPercent = _totalTime > 0 ? (_timeRemaining / _totalTime).clamp(0.0, 1.0) : 0.0;
     final progressColor = progressPercent > 0.3 ? const Color(0xFF00E5FF) : progressPercent > 0.15 ? Colors.orange : Colors.red;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Modo Test', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            _cancelTimer();
-            Navigator.pop(context);
-          },
-          tooltip: 'Volver',
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text('${_currentIndex + 1}/${_words.length}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-      body: Column(
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 100),
@@ -258,76 +234,73 @@ class _TestScreenState extends State<TestScreen> {
 
           Expanded(
             child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: GlassCard(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(word.wordEn, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
-                      const SizedBox(height: 8),
-                      ElevatedButton.icon(
-                        onPressed: () => _ttsService.speak(word.wordEn),
-                        icon: const Icon(Icons.volume_up),
-                        label: const Text('Escuchar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8A2BE2),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              child: GlassCard(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(word.wordEn, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      onPressed: () => _ttsService.speak(word.wordEn),
+                      icon: const Icon(Icons.volume_up),
+                      label: const Text('Escuchar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8A2BE2),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    TextField(
+                      enabled: !_isAnswered,
+                      decoration: InputDecoration(
+                        hintText: 'Escribe la traducción...',
+                        filled: true,
+                        fillColor: const Color(0xFF1C1C1E),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        prefixIcon: const Icon(Icons.translate, color: Colors.white54),
+                        errorText: _isAnswered && !_isCorrect ? 'Respuesta incorrecta' : null,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      ),
+                      style: const TextStyle(fontSize: 18, color: Colors.white),
+                      textInputAction: TextInputAction.done,
+                      onChanged: (value) => setState(() => _userAnswer = value),
+                      onSubmitted: _isAnswered ? null : (value) => _checkAnswer(),
+                    ),
+                    const SizedBox(height: 16),
+                    if (!_isAnswered)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _userAnswer.trim().isEmpty ? null : _checkAnswer,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8A2BE2),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          ),
+                          child: const Text('Validar Respuesta', style: TextStyle(fontSize: 18)),
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      TextField(
-                        enabled: !_isAnswered,
-                        decoration: InputDecoration(
-                          hintText: 'Escribe la traducción...',
-                          filled: true,
-                          fillColor: const Color(0xFF1C1C1E),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                          prefixIcon: const Icon(Icons.translate, color: Colors.white54),
-                          errorText: _isAnswered && !_isCorrect ? 'Respuesta incorrecta' : null,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    const SizedBox(height: 16),
+                    if (_isAnswered)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: _isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(24),
                         ),
-                        style: const TextStyle(fontSize: 18, color: Colors.white),
-                        textInputAction: TextInputAction.done,
-                        onChanged: (value) => setState(() => _userAnswer = value),
-                        onSubmitted: _isAnswered ? null : (value) => _checkAnswer(),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(_isCorrect ? Icons.check_circle : Icons.cancel, color: _isCorrect ? Colors.green : Colors.red),
+                            const SizedBox(width: 8),
+                            Text(_isCorrect ? '¡Correcto! 🎉' : 'Correcto: ${word.wordEs}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _isCorrect ? Colors.green : Colors.red)),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      if (!_isAnswered)
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _userAnswer.trim().isEmpty ? null : _checkAnswer,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF8A2BE2),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                            ),
-                            child: const Text('Validar Respuesta', style: TextStyle(fontSize: 18)),
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-                      if (_isAnswered)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: _isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(_isCorrect ? Icons.check_circle : Icons.cancel, color: _isCorrect ? Colors.green : Colors.red),
-                              const SizedBox(width: 8),
-                              Text(_isCorrect ? '¡Correcto! 🎉' : 'Correcto: ${word.wordEs}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _isCorrect ? Colors.green : Colors.red)),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ),

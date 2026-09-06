@@ -104,69 +104,46 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Glosario Interactivo', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.list),
-            onPressed: _showPendingWordsSheet,
-            tooltip: 'Palabras aprendidas',
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+
+    if (_words.isEmpty) {
+      return Center(
+        child: Text(
+          'No hay palabras pendientes',
+          style: TextStyle(fontSize: 18, color: Colors.white54),
+        ),
+      );
+    }
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
+        child: Dismissible(
+          key: ValueKey(_words.first.id),
+          direction: DismissDirection.horizontal,
+          confirmDismiss: (direction) async {
+            _onDismissed(_words.first, direction);
+            return true;
+          },
+          background: Container(
+            color: Colors.green,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 24),
+            child: const Icon(Icons.check, color: Colors.white, size: 40),
           ),
-        ],
+          secondaryBackground: Container(
+            color: Colors.orange,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 24),
+            child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 40),
+          ),
+          child: GlassCard(
+            child: _buildCard(_words.first),
+          ),
+        ),
       ),
-      backgroundColor: Colors.black,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _words.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.library_books, size: 64, color: Colors.deepPurple.withOpacity(0.3)),
-                      const SizedBox(height: 16),
-                      Text(
-                        '¡Has repasado todas las palabras!',
-                        style: TextStyle(fontSize: 16, color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                )
-              : Expanded(
-                  child: Dismissible(
-                    key: ValueKey(_words.first.id),
-                    direction: DismissDirection.horizontal,
-                    confirmDismiss: (direction) async {
-                      _onDismissed(_words.first, direction);
-                      return true;
-                    },
-                    background: Container(
-                      color: Colors.green,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 24),
-                      child: const Icon(Icons.check, color: Colors.white, size: 40),
-                    ),
-                    secondaryBackground: Container(
-                      color: Colors.orange,
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 24),
-                      child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 40),
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
-                        child: GlassCard(
-                          child: _buildCard(_words.first),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -211,47 +188,6 @@ class _GlossaryScreenState extends State<GlossaryScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: 80,
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.7),
-            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _bottomNavItem(Icons.home, 'Inicio', '/'),
-              _bottomNavItem(Icons.list, 'Glosario', '/glossary'),
-              _bottomNavItem(Icons.quiz, 'Test', '/test'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _bottomNavItem(IconData icon, String label, String route) {
-    return GestureDetector(
-      onTap: () {
-        if (route == '/') Navigator.pop(context);
-        else Navigator.pushNamed(context, route);
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.white70, size: 26),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: Colors.white54)),
-        ],
-      ),
     );
   }
 }

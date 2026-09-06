@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:learning_english/screens/progress_screen.dart';
-import 'package:learning_english/screens/glossary_screen.dart';
-import 'package:learning_english/screens/test_screen.dart';
+import 'package:learning_english/screens/main_navigation.dart';
 
 void main() {
   runApp(const MyApp());
@@ -63,10 +61,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const ProgressScreen(),
-        '/progress': (context) => const ProgressScreen(),
-        '/glossary': (context) => const GlossaryScreen(),
-        '/test': (context) => const TestScreen(),
+        '/': (context) => const MainNavigationScreen(),
       },
     );
   }
