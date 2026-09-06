@@ -45,7 +45,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar datos: $e')),
+          SnackBar(content: Text('Error al cargar datos: $e'), duration: const Duration(seconds: 1)),
         );
       }
     }
@@ -56,14 +56,17 @@ class _ProgressScreenState extends State<ProgressScreen> {
       await _dbHelper.seedInitialData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Datos descargados exitosamente ✅')),
+          const SnackBar(
+            content: Text('Datos descargados exitosamente ✅'),
+            duration: Duration(seconds: 1),
+          ),
         );
         await _loadData();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al descargar datos: $e')),
+          SnackBar(content: Text('Error al descargar datos: $e'), duration: const Duration(seconds: 1)),
         );
       }
     }
@@ -75,13 +78,16 @@ class _ProgressScreenState extends State<ProgressScreen> {
       if (mounted) {
         await _loadData();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Progreso reiniciado ✅')),
+          const SnackBar(
+            content: Text('Progreso reiniciado ✅'),
+            duration: Duration(seconds: 1),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al reiniciar progreso: $e')),
+          SnackBar(content: Text('Error al reiniciar progreso: $e'), duration: const Duration(seconds: 1)),
         );
       }
     }
@@ -190,8 +196,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     subtitle: Text('${d.downloadDate} · ${d.wordCount} palabras', style: TextStyle(color: Colors.white54)),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteDownload(d.id!),
-                      tooltip: 'Borrar',
+                      onPressed: _deleteDownload,
+                      tooltip: 'Eliminar todo el contenido',
                     ),
                   ),
                 )),
@@ -239,19 +245,22 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
-  Future<void> _deleteDownload(int id) async {
+  Future<void> _deleteDownload() async {
     try {
-      await _dbHelper.deleteOfflineDownload(id);
+      await _dbHelper.clearAllContentData();
       if (mounted) {
         await _loadData();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contenido eliminado ✅')),
+          const SnackBar(
+            content: Text('Contenido eliminado ✅'),
+            duration: Duration(seconds: 1),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar contenido: $e')),
+          SnackBar(content: Text('Error al eliminar contenido: $e'), duration: const Duration(seconds: 1)),
         );
       }
     }

@@ -303,6 +303,16 @@ class DatabaseHelper {
     await db.delete('daily_facts');
   }
 
+  Future<void> clearAllContentData() async {
+    final db = await database;
+    await db.delete('dictionary');
+    await db.delete('tips');
+    await db.delete('daily_facts');
+    await db.delete('user_vocabulary');
+    await db.delete('offline_downloads');
+    await db.delete('user_progress');
+  }
+
   Future<int> insertUserVocabulary(Map<String, dynamic> entry) async {
     final db = await database;
     return await db.insert('user_vocabulary', entry, conflictAlgorithm: ConflictAlgorithm.replace);

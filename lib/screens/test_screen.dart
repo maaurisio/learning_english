@@ -46,10 +46,12 @@ class TestScreenState extends State<TestScreen> {
     setState(() => _isLoading = true);
     _cancelTimer();
     try {
-      final words = await _dbHelper.getAllWords();
-      if (mounted && words.isNotEmpty) {
+      final allWords = await _dbHelper.getAllWords();
+      final words = await _dbHelper.getUnlearnedWords();
+      if (mounted) {
         setState(() {
           _words = words;
+          _hasAnyData = allWords.isNotEmpty;
           _currentIndex = 0;
           _wordsCorrect = 0;
           _totalTests = 0;
@@ -57,27 +59,14 @@ class TestScreenState extends State<TestScreen> {
           _isAnswered = false;
           _isCorrect = false;
           _userAnswer = '';
-          _hasAnyData = true;
         });
-        _startNextQuestion();
-      } else {
-        setState(() {
-          _isLoading = false;
-          _hasAnyData = false;
-          _words = [];
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No hay palabras en el glosario. Descarga datos primero.')),
-          );
+        if (words.isNotEmpty) {
+          _startNextQuestion();
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar palabras: $e')),
-        );
       }
     }
   }
@@ -217,7 +206,7 @@ class TestScreenState extends State<TestScreen> {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     }
 
-    if (!_hasAnyData || _words.isEmpty) {
+    if (!_hasAnyData) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -231,6 +220,28 @@ class TestScreenState extends State<TestScreen> {
             SizedBox(height: 8),
             Text(
               'Ve a Inicio y pulsa "Descargar información del día"',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.white54),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_words.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.school_outlined, size: 56, color: Colors.white54),
+            SizedBox(height: 16),
+            Text(
+              'No hay palabras para practicar',
+              style: TextStyle(fontSize: 18, color: Colors.white),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Desliza tarjetas a la izquierda en el Glosario',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.white54),
             ),
