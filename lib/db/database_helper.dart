@@ -103,6 +103,20 @@ class DatabaseHelper {
     return await db.query('dictionary');
   }
 
+  Future<Map<String, dynamic>?> lookupWord(String word) async {
+    final db = await database;
+    final cleanedWord = word.replaceAll(RegExp(r'[^\w]'), '').toLowerCase();
+    final result = await db.query(
+      'dictionary',
+      where: 'LOWER(word_en) = ?',
+      whereArgs: [cleanedWord],
+    );
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
+  }
+
   Future<int> insertDictionaryEntry(Map<String, dynamic> entry) async {
     final db = await database;
     return await db.insert('dictionary', entry,
