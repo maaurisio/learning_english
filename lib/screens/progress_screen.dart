@@ -190,7 +190,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Píldoras de Conocimiento (${_tips.length})', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text('Píldoras de Conocimiento (${_tips.length})', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 12),
                           ..._tips.take(5).map((tip) => ListTile(
                             title: Text(tip.title, style: const TextStyle(fontWeight: FontWeight.w600)),

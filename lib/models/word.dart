@@ -22,7 +22,7 @@ class Word {
       wordEs: map['word_es'] as String,
       pronunciation: map['pronunciation'] as String,
       audioPath: map['audio_path'] as String?,
-      isLearned: (map['is_learned'] as int?) ?? 0 == 1,
+      isLearned: ((map['is_learned'] as int?) ?? 0) == 1,
     );
   }
 
