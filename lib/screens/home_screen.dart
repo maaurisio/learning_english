@@ -234,49 +234,49 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: 'Reproducir audio',
           ),
         ],
-        drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(
-                  color: Colors.deepPurple,
-                ),
-                child: const Text(
-                  'Menú',
-                  style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                color: Colors.deepPurple,
               ),
-              ListTile(
-                leading: const Icon(Icons.home, color: Colors.deepPurple),
-                title: const Text('Inicio'),
-                onTap: () => _navigateToScreen('/'),
+              child: const Text(
+                'Menú',
+                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              ListTile(
-                leading: const Icon(Icons.bar_chart, color: Colors.deepPurple),
-                title: const Text('Progresos y Datos'),
-                onTap: () => _navigateToScreen('/progress'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.menu_book, color: Colors.deepPurple),
-                title: const Text('Glosario'),
-                onTap: () => _navigateToScreen('/glossary'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.quiz, color: Colors.deepPurple),
-                title: const Text('Modo Test'),
-                onTap: () => _navigateToScreen('/test'),
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.exit_to_app, color: Colors.red),
-                title: const Text('Salir'),
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home, color: Colors.deepPurple),
+              title: const Text('Inicio'),
+              onTap: () => _navigateToScreen('/'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.bar_chart, color: Colors.deepPurple),
+              title: const Text('Progresos y Datos'),
+              onTap: () => _navigateToScreen('/progress'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.menu_book, color: Colors.deepPurple),
+              title: const Text('Glosario'),
+              onTap: () => _navigateToScreen('/glossary'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.quiz, color: Colors.deepPurple),
+              title: const Text('Modo Test'),
+              onTap: () => _navigateToScreen('/test'),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.exit_to_app, color: Colors.red),
+              title: const Text('Salir'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
         ),
       ),
       body: _isLoading

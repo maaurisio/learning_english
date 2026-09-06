@@ -185,7 +185,7 @@ class _TestScreenState extends State<TestScreen> {
         title: const Text('¡Test Completado!', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Text(
           'Palabras correctas: $_wordsCorrect de $_totalTests\n'
-          'Porcentaje: ${_totalTests > 0 ? ((_wordsCorrect / _totalTests) * 100).toStringAsFixed(1)}%',
+          'Porcentaje: ${_totalTests > 0 ? ((_wordsCorrect / _totalTests) * 100).toStringAsFixed(1) : "0%"}',
         ),
         actions: [
           TextButton(
@@ -302,7 +302,7 @@ class _TestScreenState extends State<TestScreen> {
                       style: const TextStyle(fontSize: 18),
                       textInputAction: TextInputAction.done,
                       onChanged: (value) => setState(() => _userAnswer = value),
-                      onSubmitted: _isAnswered ? null : _checkAnswer,
+                      onSubmitted: _isAnswered ? null : (value) => _checkAnswer(),
                     ),
                     const SizedBox(height: 16),
 

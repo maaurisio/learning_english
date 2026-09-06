@@ -32,7 +32,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> _upgradeDB(Database db, int oldVersion) async {
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('''
         ALTER TABLE dictionary ADD COLUMN pronunciation TEXT DEFAULT ''
@@ -89,6 +89,17 @@ class DatabaseHelper {
         words_correct INTEGER DEFAULT 0,
         total_tests INTEGER DEFAULT 0,
         last_session_date TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE user_vocabulary (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        word TEXT NOT NULL,
+        translation TEXT NOT NULL,
+        next_review_date TEXT,
+        interval INTEGER,
+        ease_factor REAL
       )
     ''');
   }
@@ -255,6 +266,12 @@ class DatabaseHelper {
   Future<void> clearFacts() async {
     final db = await database;
     await db.delete('daily_facts');
+  }
+
+  Future<int> insertUserVocabulary(Map<String, dynamic> entry) async {
+    final db = await database;
+    return await db.insert('user_vocabulary', entry,
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> seedInitialData() async {
